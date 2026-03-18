@@ -1,0 +1,53 @@
+resources:
+  jobs:
+    data_generation_job:
+      name: "[${bundle.target}] TelcoMax - Data Generation"
+      description: "Generates all synthetic TelcoMax demo data: telemetry, customers, events, and network slices."
+
+      tasks:
+        - task_key: generate_events
+          description: "Generate event calendar (5 events including USMNT vs Australia)"
+          spark_python_task:
+            python_file: ${workspace.file_path}/src/data_generation/generate_events.py
+            source: WORKSPACE
+          environment_key: serverless_env
+
+        - task_key: generate_customers
+          description: "Generate 500K customer profiles"
+          spark_python_task:
+            python_file: ${workspace.file_path}/src/data_generation/generate_customers.py
+            source: WORKSPACE
+          environment_key: serverless_env
+
+        - task_key: generate_telemetry
+          description: "Generate cell tower telemetry with USMNT match simulation"
+          depends_on:
+            - task_key: generate_events
+          spark_python_task:
+            python_file: ${workspace.file_path}/src/data_generation/generate_telemetry.py
+            source: WORKSPACE
+          environment_key: serverless_env
+
+        - task_key: generate_network_slices
+          description: "Generate network slices including autonomous provisioning surge"
+          depends_on:
+            - task_key: generate_customers
+          spark_python_task:
+            python_file: ${workspace.file_path}/src/data_generation/generate_network_slices.py
+            source: WORKSPACE
+          environment_key: serverless_env
+
+      environments:
+        - environment_key: serverless_env
+          spec:
+            client: "2"
+            dependencies:
+              - "numpy>=1.24.0,<2.0"
+              - "pandas>=2.0.0"
+
+      queue:
+        enabled: true
+
+      tags:
+        demo: "dynamic-network-slicing-live-events"
+        layer: "data-generation"

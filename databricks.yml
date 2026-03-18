@@ -1,0 +1,22 @@
+bundle:
+  name: dynamic-network-slicing-live-events
+
+workspace:
+  host: https://fevm-cmegdemos.cloud.databricks.com
+
+variables:
+  catalog:
+    default: cmegdemos_catalog
+  schema:
+    default: dynamic_slicing_live_event
+
+include:
+  - resources/*.yml
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      host: https://fevm-cmegdemos.cloud.databricks.com
+      root_path: /Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}

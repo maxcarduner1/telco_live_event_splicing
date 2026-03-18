@@ -1,0 +1,609 @@
+{
+  "pages": [
+    {
+      "name": "tower_health",
+      "displayName": "Tower Health & Congestion",
+      "layout": [
+        {
+          "widget": {
+            "name": "kpi_total_towers",
+            "title": "Active Towers",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_tower_summary",
+                  "fields": [
+                    {
+                      "name": "active_towers",
+                      "expression": "`active_towers`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "active_towers",
+                  "displayName": "Active Towers"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_congested_towers",
+            "title": "Towers in Congestion",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_tower_summary",
+                  "fields": [
+                    {
+                      "name": "congested_towers",
+                      "expression": "`congested_towers`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "congested_towers",
+                  "displayName": "Congested Towers"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 0,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_peak_bandwidth",
+            "title": "Peak Bandwidth Utilization",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_tower_summary",
+                  "fields": [
+                    {
+                      "name": "peak_bandwidth_pct",
+                      "expression": "`peak_bandwidth_pct`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "peak_bandwidth_pct",
+                  "displayName": "Peak Bandwidth %"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 0,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_active_slices",
+            "title": "Active Premium Slices",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_slice_summary",
+                  "fields": [
+                    {
+                      "name": "active_slices",
+                      "expression": "`active_slices`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "active_slices",
+                  "displayName": "Active Premium Slices"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 0,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "chart_bandwidth_over_time",
+            "title": "Bandwidth Utilization Over Time — Lumen Field Towers (USMNT Match)",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_lumen_bandwidth_timeline",
+                  "fields": [
+                    {
+                      "name": "window_start",
+                      "expression": "`window_start`"
+                    },
+                    {
+                      "name": "avg_bandwidth_util",
+                      "expression": "`avg_bandwidth_util`"
+                    },
+                    {
+                      "name": "tower_id",
+                      "expression": "`tower_id`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "window_start",
+                  "scale": {"type": "temporal"},
+                  "displayName": "Time"
+                },
+                "y": {
+                  "fieldName": "avg_bandwidth_util",
+                  "scale": {"type": "quantitative"},
+                  "displayName": "Avg Bandwidth Utilization (%)"
+                },
+                "color": {
+                  "fieldName": "tower_id",
+                  "scale": {"type": "categorical"},
+                  "displayName": "Tower"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 3,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "chart_congestion_heatmap",
+            "title": "Congestion Score by Tower — Latest Window",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_latest_congestion",
+                  "fields": [
+                    {
+                      "name": "tower_id",
+                      "expression": "`tower_id`"
+                    },
+                    {
+                      "name": "avg_congestion_score",
+                      "expression": "`avg_congestion_score`"
+                    },
+                    {
+                      "name": "congestion_predicted_15min",
+                      "expression": "`congestion_predicted_15min`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "tower_id",
+                  "scale": {"type": "categorical"},
+                  "displayName": "Tower ID"
+                },
+                "y": {
+                  "fieldName": "avg_congestion_score",
+                  "scale": {"type": "quantitative"},
+                  "displayName": "Congestion Score"
+                },
+                "color": {
+                  "fieldName": "congestion_predicted_15min",
+                  "scale": {"type": "categorical"},
+                  "displayName": "Congestion Predicted"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 3,
+            "width": 6,
+            "height": 6
+          }
+        }
+      ]
+    },
+    {
+      "name": "revenue_impact",
+      "displayName": "Revenue & Conversion",
+      "layout": [
+        {
+          "widget": {
+            "name": "kpi_arr",
+            "title": "Projected ARR (USMNT Match)",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_event_revenue",
+                  "fields": [
+                    {
+                      "name": "projected_arr_usd",
+                      "expression": "`projected_arr_usd`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "projected_arr_usd",
+                  "displayName": "Projected ARR ($)"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_conversions",
+            "title": "Customers Converted",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_event_revenue",
+                  "fields": [
+                    {
+                      "name": "customers_converted",
+                      "expression": "`customers_converted`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "customers_converted",
+                  "displayName": "Customers Converted"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 0,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_conversion_rate",
+            "title": "Conversion Rate",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_event_revenue",
+                  "fields": [
+                    {
+                      "name": "conversion_rate_pct",
+                      "expression": "ROUND(`conversion_rate` * 100, 1)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "conversion_rate_pct",
+                  "displayName": "Conversion Rate (%)"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 0,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_sla_violations",
+            "title": "SLA Violations",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_event_revenue",
+                  "fields": [
+                    {
+                      "name": "sla_violations",
+                      "expression": "`sla_violations`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sla_violations",
+                  "displayName": "SLA Violations"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 9,
+            "y": 0,
+            "width": 3,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "chart_revenue_by_segment",
+            "title": "Revenue Opportunity by Customer Segment",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_revenue_by_segment",
+                  "fields": [
+                    {
+                      "name": "customer_segment",
+                      "expression": "`customer_segment`"
+                    },
+                    {
+                      "name": "projected_annual_revenue",
+                      "expression": "`projected_annual_revenue`"
+                    },
+                    {
+                      "name": "projected_conversions",
+                      "expression": "`projected_conversions`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "customer_segment",
+                  "scale": {"type": "categorical"},
+                  "displayName": "Customer Segment"
+                },
+                "y": {
+                  "fieldName": "projected_annual_revenue",
+                  "scale": {"type": "quantitative"},
+                  "displayName": "Projected ARR ($)"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 3,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "chart_conversion_score_dist",
+            "title": "Conversion Score Distribution by Segment",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_conversion_scores",
+                  "fields": [
+                    {
+                      "name": "customer_segment",
+                      "expression": "`customer_segment`"
+                    },
+                    {
+                      "name": "avg_conversion_score",
+                      "expression": "`avg_conversion_score`"
+                    },
+                    {
+                      "name": "high_conversion_opportunities",
+                      "expression": "`high_conversion_opportunities`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "customer_segment",
+                  "scale": {"type": "categorical"},
+                  "displayName": "Segment"
+                },
+                "y": {
+                  "fieldName": "avg_conversion_score",
+                  "scale": {"type": "quantitative"},
+                  "displayName": "Avg Conversion Score"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 3,
+            "width": 6,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "table_top_conversions",
+            "title": "Top Conversion Opportunities (Influencers & High-Value)",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_top_opportunities",
+                  "fields": [
+                    {"name": "customer_segment", "expression": "`customer_segment`"},
+                    {"name": "conversion_score", "expression": "`conversion_score`"},
+                    {"name": "monthly_revenue_opportunity", "expression": "`monthly_revenue_opportunity`"},
+                    {"name": "social_influence_score", "expression": "`social_influence_score`"},
+                    {"name": "tower_id", "expression": "`tower_id`"}
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {"fieldName": "customer_segment", "displayName": "Segment"},
+                  {"fieldName": "conversion_score", "displayName": "Score"},
+                  {"fieldName": "monthly_revenue_opportunity", "displayName": "MRR Opp ($)"},
+                  {"fieldName": "social_influence_score", "displayName": "Social Reach"},
+                  {"fieldName": "tower_id", "displayName": "Tower"}
+                ]
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 9,
+            "width": 12,
+            "height": 5
+          }
+        }
+      ]
+    }
+  ],
+  "datasets": [
+    {
+      "name": "ds_tower_summary",
+      "displayName": "Tower Summary",
+      "query": "SELECT COUNT(DISTINCT tower_id) AS active_towers, SUM(CASE WHEN congestion_predicted_15min = 1 THEN 1 ELSE 0 END) AS congested_towers, ROUND(MAX(peak_bandwidth_util), 1) AS peak_bandwidth_pct FROM cmegdemos_catalog.dynamic_slicing_live_event.gold_congestion_features WHERE window_start >= current_timestamp() - INTERVAL 30 MINUTES"
+    },
+    {
+      "name": "ds_slice_summary",
+      "displayName": "Slice Summary",
+      "query": "SELECT COUNT(*) AS active_slices, ROUND(SUM(revenue_per_hour), 2) AS revenue_per_hour FROM cmegdemos_catalog.dynamic_slicing_live_event.bronze_network_slices WHERE status = 'active'"
+    },
+    {
+      "name": "ds_lumen_bandwidth_timeline",
+      "displayName": "Lumen Field Bandwidth Timeline",
+      "query": "SELECT tower_id, window_start, ROUND(avg_bandwidth_util, 2) AS avg_bandwidth_util, congestion_predicted_15min FROM cmegdemos_catalog.dynamic_slicing_live_event.gold_congestion_features WHERE tower_id LIKE 'SEA-LF-%' ORDER BY window_start, tower_id"
+    },
+    {
+      "name": "ds_latest_congestion",
+      "displayName": "Latest Congestion Scores",
+      "query": "SELECT tower_id, ROUND(avg_congestion_score, 2) AS avg_congestion_score, ROUND(avg_bandwidth_util, 2) AS avg_bandwidth_util, congestion_predicted_15min FROM cmegdemos_catalog.dynamic_slicing_live_event.gold_congestion_features WHERE window_start = (SELECT MAX(window_start) FROM cmegdemos_catalog.dynamic_slicing_live_event.gold_congestion_features) ORDER BY avg_congestion_score DESC"
+    },
+    {
+      "name": "ds_event_revenue",
+      "displayName": "Event Revenue Summary",
+      "query": "SELECT event_name, customers_targeted, customers_converted, ROUND(conversion_rate * 100, 1) AS conversion_rate, ROUND(immediate_revenue_usd, 0) AS immediate_revenue_usd, ROUND(projected_arr_usd, 0) AS projected_arr_usd, sla_violations, customer_sat_improvement_pct FROM cmegdemos_catalog.dynamic_slicing_live_event.event_revenue_summary WHERE event_name = 'USMNT vs Australia' LIMIT 1"
+    },
+    {
+      "name": "ds_revenue_by_segment",
+      "displayName": "Revenue by Segment",
+      "query": "SELECT customer_segment, SUM(projected_annual_revenue) AS projected_annual_revenue, SUM(projected_conversions) AS projected_conversions FROM cmegdemos_catalog.dynamic_slicing_live_event.gold_revenue_analytics GROUP BY customer_segment ORDER BY projected_annual_revenue DESC"
+    },
+    {
+      "name": "ds_conversion_scores",
+      "displayName": "Conversion Scores by Segment",
+      "query": "SELECT customer_segment, ROUND(AVG(avg_conversion_score), 4) AS avg_conversion_score, SUM(high_conversion_opportunities) AS high_conversion_opportunities, SUM(total_opportunities) AS total_opportunities FROM cmegdemos_catalog.dynamic_slicing_live_event.gold_revenue_analytics GROUP BY customer_segment"
+    },
+    {
+      "name": "ds_top_opportunities",
+      "displayName": "Top Conversion Opportunities",
+      "query": "SELECT customer_segment, ROUND(conversion_score, 3) AS conversion_score, monthly_revenue_opportunity, social_influence_score, tower_id FROM cmegdemos_catalog.dynamic_slicing_live_event.gold_conversion_opportunities WHERE conversion_score >= 0.7 AND customer_segment IN ('high_value_influencer', 'influencer', 'high_value') ORDER BY social_influence_score DESC, conversion_score DESC LIMIT 100"
+    }
+  ]
+}

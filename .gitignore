@@ -1,0 +1,23 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.env
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Databricks bundle (local state)
+.databricks/bundle/
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Optional: uncomment to exclude large assets
+# *.png
+# *.zip

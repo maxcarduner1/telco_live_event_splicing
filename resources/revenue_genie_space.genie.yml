@@ -1,0 +1,17 @@
+resources:
+  quality_monitors: {}
+
+# Note: Genie Space is provisioned via the Databricks workspace UI or REST API.
+# The configuration below documents the Genie Space settings for reference.
+# To create programmatically, use the Databricks SDK or REST API after deployment.
+#
+# Genie Space: TelcoMax Revenue Optimization Analytics
+# Tables: gold_revenue_analytics, gold_conversion_opportunities, event_revenue_summary, sms_campaign_log
+#
+# Example questions to demonstrate:
+#   "How much revenue did we generate from the USMNT match?"
+#   "Which customer segments have the highest conversion rates during sporting events?"
+#   "What's our projected ARR from all events this month?"
+#   "How many premium slices did we provision during the Lumen Field event?"
+#   "Which influencers converted and what's their total social reach?"
+#   "Compare conversion rates between high_value_influencer and standard segments"

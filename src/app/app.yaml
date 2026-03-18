@@ -1,0 +1,11 @@
+command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+env:
+  - name: DATABRICKS_WAREHOUSE_ID
+    value: "9cd919d96b11bf1c"
+  - name: NODE_ENV
+    value: "production"
+resources:
+  - name: telcomax-warehouse
+    sql_warehouse:
+      id: "9cd919d96b11bf1c"
+      permission: "CAN_USE"

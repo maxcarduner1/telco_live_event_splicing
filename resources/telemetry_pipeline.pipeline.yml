@@ -1,0 +1,40 @@
+resources:
+  pipelines:
+    telemetry_pipeline:
+      name: "[${bundle.target}] TelcoMax - Network Telemetry Medallion Pipeline"
+
+      catalog: ${var.catalog}
+      schema: ${var.schema}
+
+      serverless: true
+      continuous: false
+
+      channel: "PREVIEW"
+
+      libraries:
+        # Silver: reads from bronze tables written by data generation job
+        # (bronze_cell_tower_telemetry, bronze_customer_profiles, etc. are external Delta tables)
+        - file:
+            path: ../src/pipeline/transformations/silver_tower_metrics.sql
+        - file:
+            path: ../src/pipeline/transformations/silver_customer_enriched.sql
+        - file:
+            path: ../src/pipeline/transformations/silver_event_tower_proximity.sql
+        # Gold: NWDAF features + conversion scoring
+        - file:
+            path: ../src/pipeline/transformations/gold_congestion_features.sql
+        - file:
+            path: ../src/pipeline/transformations/gold_conversion_opportunities.sql
+        - file:
+            path: ../src/pipeline/transformations/gold_revenue_analytics.sql
+
+      configuration:
+        spark.databricks.delta.schema.autoMerge.enabled: "true"
+
+      filters:
+        include:
+          - "cmegdemos_catalog.dynamic_slicing_live_event.*"
+
+      tags:
+        demo: "dynamic-network-slicing-live-events"
+        layer: "medallion-pipeline"

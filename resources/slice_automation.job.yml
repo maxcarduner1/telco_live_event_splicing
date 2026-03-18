@@ -1,0 +1,26 @@
+resources:
+  jobs:
+    slice_automation_job:
+      name: "[${bundle.target}] TelcoMax - Autonomous Slice Provisioning"
+      description: "Simulates the USMNT match event: detects conversion opportunities, provisions premium slices in <30s, sends SMS campaign, and writes revenue summary."
+
+      tasks:
+        - task_key: autonomous_slice_provisioning
+          description: "Run autonomous slice provisioning and SMS campaign simulation"
+          spark_python_task:
+            python_file: ${workspace.file_path}/src/jobs/autonomous_slice_provisioning.py
+            source: WORKSPACE
+          environment_key: serverless_env
+
+      environments:
+        - environment_key: serverless_env
+          spec:
+            client: "2"
+            dependencies: []
+
+      queue:
+        enabled: true
+
+      tags:
+        demo: "dynamic-network-slicing-live-events"
+        layer: "automation"
