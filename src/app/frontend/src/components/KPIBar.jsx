@@ -1,20 +1,21 @@
 import React from 'react';
 
-function formatNumber(n) {
+function formatCurrency(n) {
   if (n == null) return '--';
-  if (n >= 1000000) return `$${(n / 1000000).toFixed(1)}M`;
-  if (n >= 1000) return `$${(n / 1000).toFixed(0)}k`;
-  return n.toLocaleString();
+  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000)     return `$${(n / 1_000).toFixed(0)}k`;
+  return `$${n.toLocaleString()}`;
 }
 
 const KPI_CONFIGS = [
-  { key: 'customers_near', label: 'Customers Near Venue', icon: '👥', format: v => v?.toLocaleString() ?? '--' },
-  { key: 'active_towers', label: 'Active Towers', icon: '📡', format: v => v ?? '--' },
-  { key: 'towers_congested', label: 'Towers in Congestion', icon: '🔴', format: v => v ?? '--', alert: v => v > 0 },
-  { key: 'offers_sent', label: 'Offers Sent', icon: '📱', format: v => v?.toLocaleString() ?? '--' },
-  { key: 'converted', label: 'Converted', icon: '🏆', format: v => v?.toLocaleString() ?? '--' },
-  { key: 'projected_arr', label: 'Projected ARR', icon: '💰', format: v => v != null ? formatNumber(v) : '--' },
-  { key: 'active_slices', label: 'Premium Slices', icon: '⚡', format: v => v ?? '--' },
+  { key: 'accounts_at_risk',   label: 'B2B Accounts at Risk', icon: '🏢', format: v => v ?? '--', alert: v => v > 0 },
+  { key: 'active_towers',      label: 'Active Towers',        icon: '📡', format: v => v ?? '--' },
+  { key: 'towers_congested',   label: 'Towers Congested',     icon: '🔴', format: v => v ?? '--', alert: v => v > 0 },
+  { key: 'proposals_sent',     label: 'Upsell Proposals',     icon: '📋', format: v => v?.toLocaleString() ?? '--' },
+  { key: 'proposals_accepted', label: 'Accepted',             icon: '✅', format: v => v?.toLocaleString() ?? '--' },
+  { key: 'upsell_arr',         label: 'Upsell ARR',           icon: '💰', format: v => v != null ? formatCurrency(v) : '--' },
+  { key: 'arr_protected',      label: 'ARR Protected',        icon: '🛡️', format: v => v != null ? formatCurrency(v) : '--' },
+  { key: 'burst_slices',       label: 'Burst Slices Active',  icon: '⚡', format: v => v ?? '--' },
 ];
 
 export default function KPIBar({ kpis }) {

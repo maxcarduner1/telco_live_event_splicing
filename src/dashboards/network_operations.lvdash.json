@@ -117,8 +117,8 @@
         },
         {
           "widget": {
-            "name": "kpi_active_slices",
-            "title": "Active Premium Slices",
+            "name": "kpi_burst_slices",
+            "title": "Burst Slices Active",
             "queries": [
               {
                 "name": "main_query",
@@ -126,8 +126,8 @@
                   "datasetName": "ds_slice_summary",
                   "fields": [
                     {
-                      "name": "active_slices",
-                      "expression": "`active_slices`"
+                      "name": "burst_slices",
+                      "expression": "`burst_slices`"
                     }
                   ],
                   "disaggregated": false
@@ -139,8 +139,8 @@
               "widgetType": "counter",
               "encodings": {
                 "value": {
-                  "fieldName": "active_slices",
-                  "displayName": "Active Premium Slices"
+                  "fieldName": "burst_slices",
+                  "displayName": "Burst Slices Active"
                 }
               }
             }
@@ -267,13 +267,13 @@
       ]
     },
     {
-      "name": "revenue_impact",
-      "displayName": "Revenue & Conversion",
+      "name": "b2b_upsell",
+      "displayName": "B2B Upsell & Churn Prevention",
       "layout": [
         {
           "widget": {
-            "name": "kpi_arr",
-            "title": "Projected ARR (USMNT Match)",
+            "name": "kpi_upsell_arr",
+            "title": "Upsell ARR (USMNT Match)",
             "queries": [
               {
                 "name": "main_query",
@@ -281,8 +281,8 @@
                   "datasetName": "ds_event_revenue",
                   "fields": [
                     {
-                      "name": "projected_arr_usd",
-                      "expression": "`projected_arr_usd`"
+                      "name": "projected_upsell_arr_usd",
+                      "expression": "`projected_upsell_arr_usd`"
                     }
                   ],
                   "disaggregated": false
@@ -294,8 +294,8 @@
               "widgetType": "counter",
               "encodings": {
                 "value": {
-                  "fieldName": "projected_arr_usd",
-                  "displayName": "Projected ARR ($)"
+                  "fieldName": "projected_upsell_arr_usd",
+                  "displayName": "Upsell ARR ($)"
                 }
               }
             }
@@ -309,8 +309,8 @@
         },
         {
           "widget": {
-            "name": "kpi_conversions",
-            "title": "Customers Converted",
+            "name": "kpi_arr_protected",
+            "title": "ARR Protected from Churn",
             "queries": [
               {
                 "name": "main_query",
@@ -318,8 +318,8 @@
                   "datasetName": "ds_event_revenue",
                   "fields": [
                     {
-                      "name": "customers_converted",
-                      "expression": "`customers_converted`"
+                      "name": "arr_protected_from_churn_usd",
+                      "expression": "`arr_protected_from_churn_usd`"
                     }
                   ],
                   "disaggregated": false
@@ -331,8 +331,8 @@
               "widgetType": "counter",
               "encodings": {
                 "value": {
-                  "fieldName": "customers_converted",
-                  "displayName": "Customers Converted"
+                  "fieldName": "arr_protected_from_churn_usd",
+                  "displayName": "ARR Protected ($)"
                 }
               }
             }
@@ -346,8 +346,8 @@
         },
         {
           "widget": {
-            "name": "kpi_conversion_rate",
-            "title": "Conversion Rate",
+            "name": "kpi_proposals_accepted",
+            "title": "B2B Accounts Accepted Upsell",
             "queries": [
               {
                 "name": "main_query",
@@ -355,8 +355,8 @@
                   "datasetName": "ds_event_revenue",
                   "fields": [
                     {
-                      "name": "conversion_rate_pct",
-                      "expression": "ROUND(`conversion_rate` * 100, 1)"
+                      "name": "b2b_customers_accepted",
+                      "expression": "`b2b_customers_accepted`"
                     }
                   ],
                   "disaggregated": false
@@ -368,8 +368,8 @@
               "widgetType": "counter",
               "encodings": {
                 "value": {
-                  "fieldName": "conversion_rate_pct",
-                  "displayName": "Conversion Rate (%)"
+                  "fieldName": "b2b_customers_accepted",
+                  "displayName": "Accounts Accepted"
                 }
               }
             }
@@ -383,8 +383,8 @@
         },
         {
           "widget": {
-            "name": "kpi_sla_violations",
-            "title": "SLA Violations",
+            "name": "kpi_acceptance_rate",
+            "title": "Upsell Acceptance Rate",
             "queries": [
               {
                 "name": "main_query",
@@ -392,8 +392,8 @@
                   "datasetName": "ds_event_revenue",
                   "fields": [
                     {
-                      "name": "sla_violations",
-                      "expression": "`sla_violations`"
+                      "name": "acceptance_rate_pct",
+                      "expression": "ROUND(`conversion_rate` * 100, 1)"
                     }
                   ],
                   "disaggregated": false
@@ -405,8 +405,8 @@
               "widgetType": "counter",
               "encodings": {
                 "value": {
-                  "fieldName": "sla_violations",
-                  "displayName": "SLA Violations"
+                  "fieldName": "acceptance_rate_pct",
+                  "displayName": "Acceptance Rate (%)"
                 }
               }
             }
@@ -420,8 +420,8 @@
         },
         {
           "widget": {
-            "name": "chart_revenue_by_segment",
-            "title": "Revenue Opportunity by Customer Segment",
+            "name": "chart_upsell_arr_by_segment",
+            "title": "Projected Upsell ARR by B2B Segment",
             "queries": [
               {
                 "name": "main_query",
@@ -433,12 +433,12 @@
                       "expression": "`customer_segment`"
                     },
                     {
-                      "name": "projected_annual_revenue",
-                      "expression": "`projected_annual_revenue`"
+                      "name": "projected_upsell_arr",
+                      "expression": "`projected_upsell_arr`"
                     },
                     {
-                      "name": "projected_conversions",
-                      "expression": "`projected_conversions`"
+                      "name": "high_upsell_opportunities",
+                      "expression": "`high_upsell_opportunities`"
                     }
                   ],
                   "disaggregated": false
@@ -452,12 +452,12 @@
                 "x": {
                   "fieldName": "customer_segment",
                   "scale": {"type": "categorical"},
-                  "displayName": "Customer Segment"
+                  "displayName": "B2B Segment"
                 },
                 "y": {
-                  "fieldName": "projected_annual_revenue",
+                  "fieldName": "projected_upsell_arr",
                   "scale": {"type": "quantitative"},
-                  "displayName": "Projected ARR ($)"
+                  "displayName": "Projected Upsell ARR ($)"
                 }
               }
             }
@@ -471,25 +471,25 @@
         },
         {
           "widget": {
-            "name": "chart_conversion_score_dist",
-            "title": "Conversion Score Distribution by Segment",
+            "name": "chart_upsell_score_by_segment",
+            "title": "Avg Upsell Score by Segment",
             "queries": [
               {
                 "name": "main_query",
                 "query": {
-                  "datasetName": "ds_conversion_scores",
+                  "datasetName": "ds_upsell_scores",
                   "fields": [
                     {
                       "name": "customer_segment",
                       "expression": "`customer_segment`"
                     },
                     {
-                      "name": "avg_conversion_score",
-                      "expression": "`avg_conversion_score`"
+                      "name": "avg_upsell_score",
+                      "expression": "`avg_upsell_score`"
                     },
                     {
-                      "name": "high_conversion_opportunities",
-                      "expression": "`high_conversion_opportunities`"
+                      "name": "high_upsell_opportunities",
+                      "expression": "`high_upsell_opportunities`"
                     }
                   ],
                   "disaggregated": false
@@ -506,9 +506,9 @@
                   "displayName": "Segment"
                 },
                 "y": {
-                  "fieldName": "avg_conversion_score",
+                  "fieldName": "avg_upsell_score",
                   "scale": {"type": "quantitative"},
-                  "displayName": "Avg Conversion Score"
+                  "displayName": "Avg Upsell Score"
                 }
               }
             }
@@ -522,18 +522,20 @@
         },
         {
           "widget": {
-            "name": "table_top_conversions",
-            "title": "Top Conversion Opportunities (Influencers & High-Value)",
+            "name": "table_top_upsell_accounts",
+            "title": "Top B2B Upsell Opportunities — Bandwidth Breach Risk",
             "queries": [
               {
                 "name": "main_query",
                 "query": {
                   "datasetName": "ds_top_opportunities",
                   "fields": [
-                    {"name": "customer_segment", "expression": "`customer_segment`"},
+                    {"name": "company_name", "expression": "`company_name`"},
+                    {"name": "customer_type", "expression": "`customer_type`"},
+                    {"name": "utilization_pct", "expression": "`utilization_pct`"},
+                    {"name": "breach_risk_level", "expression": "`breach_risk_level`"},
                     {"name": "conversion_score", "expression": "`conversion_score`"},
                     {"name": "monthly_revenue_opportunity", "expression": "`monthly_revenue_opportunity`"},
-                    {"name": "social_influence_score", "expression": "`social_influence_score`"},
                     {"name": "tower_id", "expression": "`tower_id`"}
                   ],
                   "disaggregated": false
@@ -545,10 +547,12 @@
               "widgetType": "table",
               "encodings": {
                 "columns": [
-                  {"fieldName": "customer_segment", "displayName": "Segment"},
-                  {"fieldName": "conversion_score", "displayName": "Score"},
+                  {"fieldName": "company_name", "displayName": "Company"},
+                  {"fieldName": "customer_type", "displayName": "Type"},
+                  {"fieldName": "utilization_pct", "displayName": "BW Util %"},
+                  {"fieldName": "breach_risk_level", "displayName": "Breach Risk"},
+                  {"fieldName": "conversion_score", "displayName": "Upsell Score"},
                   {"fieldName": "monthly_revenue_opportunity", "displayName": "MRR Opp ($)"},
-                  {"fieldName": "social_influence_score", "displayName": "Social Reach"},
                   {"fieldName": "tower_id", "displayName": "Tower"}
                 ]
               }
@@ -572,8 +576,8 @@
     },
     {
       "name": "ds_slice_summary",
-      "displayName": "Slice Summary",
-      "query": "SELECT COUNT(*) AS active_slices, ROUND(SUM(revenue_per_hour), 2) AS revenue_per_hour FROM cmegdemos_catalog.dynamic_slicing_live_event.bronze_network_slices WHERE status = 'active'"
+      "displayName": "Burst Slice Summary",
+      "query": "SELECT COUNT(*) AS burst_slices FROM cmegdemos_catalog.dynamic_slicing_live_event.bronze_network_slices WHERE status = 'active' AND slice_type LIKE '%_burst'"
     },
     {
       "name": "ds_lumen_bandwidth_timeline",
@@ -588,22 +592,22 @@
     {
       "name": "ds_event_revenue",
       "displayName": "Event Revenue Summary",
-      "query": "SELECT event_name, customers_targeted, customers_converted, ROUND(conversion_rate * 100, 1) AS conversion_rate, ROUND(immediate_revenue_usd, 0) AS immediate_revenue_usd, ROUND(projected_arr_usd, 0) AS projected_arr_usd, sla_violations, customer_sat_improvement_pct FROM cmegdemos_catalog.dynamic_slicing_live_event.event_revenue_summary WHERE event_name = 'USMNT vs Australia' LIMIT 1"
+      "query": "SELECT event_name, b2b_customers_targeted, b2b_customers_accepted, ROUND(conversion_rate * 100, 1) AS conversion_rate, ROUND(immediate_monthly_upsell_usd, 0) AS immediate_monthly_upsell_usd, ROUND(projected_upsell_arr_usd, 0) AS projected_upsell_arr_usd, ROUND(arr_protected_from_churn_usd, 0) AS arr_protected_from_churn_usd, burst_slices_provisioned FROM cmegdemos_catalog.dynamic_slicing_live_event.event_revenue_summary WHERE event_name = 'USMNT vs Australia' LIMIT 1"
     },
     {
       "name": "ds_revenue_by_segment",
-      "displayName": "Revenue by Segment",
-      "query": "SELECT customer_segment, SUM(projected_annual_revenue) AS projected_annual_revenue, SUM(projected_conversions) AS projected_conversions FROM cmegdemos_catalog.dynamic_slicing_live_event.gold_revenue_analytics GROUP BY customer_segment ORDER BY projected_annual_revenue DESC"
+      "displayName": "Upsell ARR by Segment",
+      "query": "SELECT customer_segment, SUM(projected_upsell_arr) AS projected_upsell_arr, SUM(high_upsell_opportunities) AS high_upsell_opportunities FROM cmegdemos_catalog.dynamic_slicing_live_event.gold_revenue_analytics GROUP BY customer_segment ORDER BY projected_upsell_arr DESC"
     },
     {
-      "name": "ds_conversion_scores",
-      "displayName": "Conversion Scores by Segment",
-      "query": "SELECT customer_segment, ROUND(AVG(avg_conversion_score), 4) AS avg_conversion_score, SUM(high_conversion_opportunities) AS high_conversion_opportunities, SUM(total_opportunities) AS total_opportunities FROM cmegdemos_catalog.dynamic_slicing_live_event.gold_revenue_analytics GROUP BY customer_segment"
+      "name": "ds_upsell_scores",
+      "displayName": "Upsell Scores by Segment",
+      "query": "SELECT customer_segment, ROUND(AVG(avg_upsell_score), 4) AS avg_upsell_score, SUM(high_upsell_opportunities) AS high_upsell_opportunities, SUM(total_customers_at_risk) AS total_customers_at_risk FROM cmegdemos_catalog.dynamic_slicing_live_event.gold_revenue_analytics GROUP BY customer_segment"
     },
     {
       "name": "ds_top_opportunities",
-      "displayName": "Top Conversion Opportunities",
-      "query": "SELECT customer_segment, ROUND(conversion_score, 3) AS conversion_score, monthly_revenue_opportunity, social_influence_score, tower_id FROM cmegdemos_catalog.dynamic_slicing_live_event.gold_conversion_opportunities WHERE conversion_score >= 0.7 AND customer_segment IN ('high_value_influencer', 'influencer', 'high_value') ORDER BY social_influence_score DESC, conversion_score DESC LIMIT 100"
+      "displayName": "Top B2B Upsell Opportunities",
+      "query": "SELECT company_name, customer_type, customer_segment, ROUND(utilization_pct, 1) AS utilization_pct, breach_risk_level, ROUND(conversion_score, 3) AS conversion_score, ROUND(monthly_revenue_opportunity, 0) AS monthly_revenue_opportunity, tower_id FROM cmegdemos_catalog.dynamic_slicing_live_event.gold_conversion_opportunities WHERE conversion_score >= 0.65 ORDER BY conversion_score DESC, utilization_pct DESC LIMIT 100"
     }
   ]
 }

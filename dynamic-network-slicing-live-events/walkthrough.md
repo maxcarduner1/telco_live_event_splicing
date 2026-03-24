@@ -1,21 +1,22 @@
-# Demo Walkthrough: Dynamic Network Slicing for Live Events
+# Demo Walkthrough: Dynamic Network Slicing for Live Events — B2B Edition
 
 ## Demo Overview
 
-This demo showcases how TelcoMax transforms network congestion from a $18M annual cost center into a revenue generator using AI-powered 5G network slicing. The platform predicts congestion 15 minutes ahead and autonomously provisions premium slices, converting network stress into customer upgrades during live events.
+This demo showcases how TelcoMax transforms 5G network congestion from an enterprise SLA liability into a B2B revenue growth engine. The platform monitors contracted bandwidth usage for stadium business customers—broadcasters, venue operators, security teams, payment processors, and team/sponsor groups—predicts when they will exceed their allocated slice capacity, and autonomously provisions burst capacity while triggering upsell proposals to their account managers.
 
 **KPIs Impacted:**
-- **Revenue Growth**: $6.2M ARR from single event conversions
-- **SLA Compliance**: Zero violations during major events (vs. $2.1M historical penalties)
-- **Customer Satisfaction**: 23% improvement during high-traffic events
-- **Conversion Rate**: 47% premium plan uptake during congestion events
-- **Operational Efficiency**: 45-minute manual slice provisioning reduced to 30 seconds
+- **Upsell ARR**: $168K new ARR from bandwidth expansion contracts during a single event
+- **Churn Prevention**: $2.4M ARR protected (accounts at risk of non-renewal after SLA degradation)
+- **SLA Compliance**: Zero violations across all 35 contracted B2B accounts
+- **Acceptance Rate**: 62% B2B upsell proposal acceptance during congestion events
+- **Operational Efficiency**: 45-minute manual slice expansion reduced to 30 seconds
 
 **Key Outputs:**
-- Real-time network operations dashboard with congestion predictions
-- Autonomous slice provisioning workflows
-- Revenue optimization Genie Space for natural language analytics
-- NWDAF ML models for predictive network management
+- Real-time network operations dashboard tracking B2B customer bandwidth utilization vs. contracted limits
+- Autonomous burst-capacity provisioning for accounts approaching their ceiling
+- Upsell proposal engine targeting account managers with personalized expansion offers
+- Revenue optimization Genie Space for natural language analytics on contract performance
+- NWDAF ML models for predictive bandwidth breach detection
 
 ## Demo Script
 
@@ -23,132 +24,128 @@ This demo showcases how TelcoMax transforms network congestion from a $18M annua
 
 [Navigate to storyline.md or presentation slide showing TelcoMax overview]
 
-"TelcoMax is a Tier-1 wireless carrier serving 45 million subscribers across North America. Like most carriers, they've invested billions in 5G infrastructure but struggle to monetize it effectively. During the 2024 Super Bowl, 23% of their premium customers experienced service degradation, triggering $2.1M in SLA penalties and 12,000 churn incidents."
+"TelcoMax provides dedicated 5G network slices to 35 business customers at Lumen Field for today's USMNT vs Australia match. These are not individual consumers—these are broadcasters like ESPN and Fox Sports sending 4K feeds, Ticketmaster running gate access, Seattle PD coordinating security, and the US Soccer Federation operating coaching analytics. Each has a contracted bandwidth SLA they depend on."
 
-[Show network congestion statistics]
+[Show the five B2B customer segments on slide]
 
-"The core problem is reactive network management. By the time traditional systems detect congestion, customer experience has already degraded. Today we'll see how AI transforms this reactive approach into proactive revenue generation."
+"When a soccer goal sparks 70,000 simultaneous uploads, the tower congestion doesn't just affect fan streaming—it compresses the shared radio resources that these enterprise slices run on. Without proactive action, broadcasters miss their uplink windows, payment terminals time out, and security bodycam feeds degrade. That's SLA penalties, credit requests, and churn."
 
 ### Step 2: Data Architecture Overview (~3 min)
 
 [Navigate to Databricks workspace showing the telemetry_pipeline in Spark Declarative Pipelines]
 
-"The foundation is real-time data from 1,200 cell towers streaming through our medallion architecture. Bronze layer ingests raw telemetry at 1-second intervals—that's 50 million records daily just from tower metrics."
+"The foundation is real-time data from 1,200 cell towers streaming through our medallion architecture. Bronze layer ingests raw telemetry at 1-second intervals and also holds the B2B customer contract registry—35 business accounts with their contracted bandwidth allocations, SLA tiers, and renewal dates."
 
 [Show the pipeline visualization in SDP]
 
-"Silver layer enriches this data with customer profiles, geospatial event mapping, and congestion scoring. Gold layer creates NWDAF analytics—that's Network Data Analytics Functions, the AI/ML standard for 5G networks."
+"Silver layer enriches this with B2B segmentation—broadcasters, critical services, venue ops, payments, and teams—and computes an upsell propensity score for each account based on how close they are to their bandwidth ceiling, how soon their contract renews, and their recent support history."
 
-**Without AI**: "Traditional systems only react after congestion occurs, requiring 45-60 minutes of manual slice provisioning."
-
-**Without AI**: "With our NWDAF models, we predict congestion 15 minutes ahead and provision slices in under 30 seconds."
+"Gold layer creates NWDAF bandwidth breach alerts: which accounts are above 85% utilization, which towers predict congestion in the next 15 minutes, and what the upsell revenue opportunity looks like for each flagged account."
 
 ### Step 3: Live Event Simulation (~4 min)
 
 [Navigate to the network operations dashboard showing pre-event baseline]
 
-"Let's simulate the USMNT vs Australia match at Lumen Field. It's 15 minutes before kickoff, and we can see normal traffic patterns across Seattle towers."
+"Let's simulate kickoff at Lumen Field. Before the match, we see normal utilization across all 8 towers—most B2B customers running at 55–70% of their contracted bandwidth. Everything is green."
 
-[Show the event trigger in the autonomous slice provisioning job]
+[Show the event trigger—towers starting to climb as fans arrive]
 
-"As fans enter the stadium, our models detect subtle patterns in the telemetry data. Watch the congestion prediction scores."
+"As 70,000 fans enter and start their pre-match social media activity, tower utilization climbs. The NWDAF models detect the trend 15 minutes before congestion materially impacts slice quality."
 
-[Navigate to dashboard showing congestion predictions turning red]
+[Navigate to dashboard showing bandwidth breach risk panel]
 
-"The system has identified 8,500 fans attempting to stream or go live, with congestion predicted at towers SEA-LF-001 through SEA-LF-008. Notice the 15-minute advance warning—this is our competitive advantage."
+"Four broadcasters just crossed the 85% utilization warning threshold. ESPN is at 94% of their 500 Mbps contracted limit. Ticketmaster gate systems are at 96%. The system has flagged 12 accounts as at risk—this is the actionable intelligence Sarah's NOC would previously only have seen after a breach had already occurred."
 
-### Step 4: Customer Targeting and Conversion (~3 min)
+### Step 4: Upsell Proposal and Burst Provisioning (~3 min)
 
 [Show the gold_conversion_opportunities table results]
 
-"The system cross-references customer profiles and identifies 3,200 high-value conversion targets, including 47 social media influencers with 10K+ followers. Each customer gets a conversion score based on upgrade propensity, social influence, and predicted congestion impact."
+"The system scores each flagged account on a composite upsell score: how urgently do they need more capacity right now, how likely are they to accept an offer based on historical behavior and renewal proximity, and what's the revenue opportunity?"
 
-[Navigate to the SMS campaign automation in the slice provisioning job]
+[Show the breach risk levels: breach / critical / warning / watch]
 
-"Watch as the system autonomously sends targeted offers: 'Guarantee your live stream quality with TelcoMax Premium 5G - $15/month for dedicated bandwidth during events.'"
+"ESPN scores 0.91—critical breach risk, platinum SLA, contract renews in 4 months. The system auto-provisions a burst slice adding 250 Mbps on their serving tower in under 30 seconds, and simultaneously fires an upsell proposal to their account manager: 'ESPN is at 94% of contracted bandwidth. Expand by 250 Mbps for $2,000/month. Activate now.'"
 
-[Show the real-time conversion tracking]
+[Navigate to the upsell proposal log]
 
-"The conversion rate is hitting 47% as fans immediately experience the value of uninterrupted connectivity while others struggle with degraded service."
+"Watch the acceptance signals come in. Broadcasters accept at 72%—they cannot risk going black during a live match. Payment processors at 68%—a gateway timeout at halftime is catastrophic for their reputation. Eight of twelve accounts accepted capacity expansion before the 73rd minute goal."
 
 ### Step 5: Revenue Impact Visualization (~2 min)
 
 [Navigate to the revenue optimization Genie Space]
 
-"Let's ask our Genie Space: 'How much revenue did we generate from the USMNT match?'"
+"Let's ask our Genie Space: 'How much new ARR did we generate from the USMNT match, and how much churn risk did we prevent?'"
 
 [Show Genie response with revenue breakdown]
 
-"The system shows $271K in immediate revenue and $6.2M in projected annual recurring revenue from 1,504 customer conversions. More importantly, zero SLA violations occurred."
+"The system shows $14K in immediate monthly upsell revenue across eight accounts, projecting $168K in new ARR. But the bigger story is churn prevention: four accounts that had previously flagged non-renewal intent experienced zero degradation tonight—that's $2.4M in ARR we kept off the table."
 
-[Navigate to the customer satisfaction metrics in the dashboard]
+[Navigate to the SLA compliance panel in the dashboard]
 
-"Customer satisfaction scores improved 23% compared to previous events, turning our worst potential network event into our most profitable hour."
+"Zero SLA violations across all 35 B2B accounts. The same match that would have generated $1.8M in SLA credits last year instead generated $168K in new revenue."
 
 ### Step 6: Natural Language Analytics (~2 min)
 
 [Navigate to Genie Space and demonstrate various queries]
 
-"Business users can now ask questions like: 'Which customer segments have the highest conversion rates during sporting events?' or 'What's our revenue per congestion event by venue type?'"
+"Business users can now ask questions like: 'Which customer types have the highest upsell acceptance rates during sporting events?' or 'What's the total ARR at churn risk across our platinum broadcast accounts?'"
 
-[Show Genie generating insights about pricing optimization]
+[Show Genie generating insights about contract renewal timing]
 
-"The system reveals that influencers with 10K+ followers convert at 73% rates and generate 3.2x higher lifetime value, informing our dynamic pricing strategies."
+"The system reveals that accounts within 6 months of renewal and above 75% peak utilization accept upsell offers at 88%—the strongest signal for proactive outreach. Sarah's team can now prioritize account manager calls before the next event, not after the SLA breach."
 
 ## Executive Talk Track
 
 ### 60-Second Pitch
 
-TelcoMax transforms network congestion from an $18M annual cost center into revenue opportunities using AI-powered 5G network slicing. Our NWDAF models predict congestion 15 minutes ahead, autonomously provision premium network slices, and target high-value customers with instant upgrade offers. During a single USMNT match simulation, the system converted 1,504 customers to premium plans, generating $6.2M in projected ARR while achieving zero SLA violations and 23% higher customer satisfaction. This demonstrates how Databricks' real-time AI platform turns network stress into competitive advantage for telecom operators.
+TelcoMax serves 35 enterprise business customers at every major live event—broadcasters, venue operators, security agencies, payment processors, and team organizations—all running on contracted 5G network slices with guaranteed bandwidth SLAs. During the USMNT vs Australia match simulation, network congestion pushed 12 of those accounts toward their contracted limits. Instead of SLA violations and churn, our AI-powered NWDAF platform detected the risk 15 minutes ahead, provisioned burst capacity in under 30 seconds, and triggered personalized upsell proposals through account managers. Result: 8 contracts expanded, $168K in new ARR, $2.4M in churn-risk ARR protected, zero SLA violations. This demonstrates how Databricks' real-time AI platform turns network congestion from a B2B liability into a contract growth engine.
 
 ### Expanded Summary
 
-The telecommunications industry faces a critical challenge: how to monetize massive 5G infrastructure investments while managing explosive traffic spikes during major events. TelcoMax, serving 45 million subscribers, historically loses $18M annually from congestion-related SLA penalties and missed revenue opportunities.
+The 5G network slicing market is being won by carriers who can turn SLA guarantees from a cost center into a revenue lever. TelcoMax serves enterprise business customers at major live events through dedicated network slices with contractual bandwidth and latency guarantees. When congestion strikes—and at 70,000-fan events, it always does—those guarantees are what these customers pay for and what drives their renewal decisions.
 
-Our solution leverages Databricks' unified platform to build an AI-powered network slicing system that predicts congestion events 15 minutes before they occur. Real-time telemetry from 1,200 cell towers flows through Spark Declarative Pipelines, creating NWDAF analytics that identify conversion opportunities among high-value customers attempting to stream during peak demand.
+Our solution uses Databricks' unified platform to build an AI-powered NWDAF system that monitors contracted bandwidth utilization in real time, predicts which accounts will breach their limits before they experience degradation, and autonomously acts—provisioning burst capacity and triggering account-manager upsell workflows within 30 seconds of the prediction window.
 
-The business impact is transformational: during our USMNT match simulation, the system achieved a 47% conversion rate on premium plan upgrades, generating $271K in immediate revenue and $6.2M in projected ARR from a single event. More importantly, proactive slice provisioning eliminated SLA violations entirely while improving customer satisfaction by 23%.
-
-This demonstrates the power of real-time AI to transform cost centers into revenue generators, positioning TelcoMax ahead of competitors still operating reactive network management systems.
+During the USMNT match simulation, the system identified 12 at-risk accounts, provisioned burst capacity for all of them, and converted 8 into expanded contracts. The financial impact: $168K in new ARR from bandwidth expansions, $2.4M in churn-risk ARR protected from non-renewal, and zero SLA violations for all 35 business accounts. Total revenue impact per event: $2.6M versus a historical $1.8M in losses.
 
 ## Architecture Flow
 
 ```
 Cell Tower Telemetry (1,200 towers, 1-sec intervals)
     ↓
-Customer Profiles + Event Calendar + Network Slices
+B2B Customer Contracts + Event Calendar + Network Slices
     ↓
 Bronze Layer (Raw Ingestion via Spark Declarative Pipelines)
     ↓
-Silver Layer (Cleaning + Enrichment + Geospatial Mapping)
+Silver Layer (B2B Segmentation + Upsell Propensity Scoring)
     ↓
-Gold Layer (NWDAF Features + Conversion Scoring)
+Gold Layer (NWDAF Bandwidth Breach Alerts + Upsell Scoring)
     ↓
-ML Models (Congestion Prediction + Customer Scoring via Model Serving)
+ML Models (Congestion Prediction + Customer Upsell Scoring via Model Serving)
     ↓
-┌─ Network Operations Dashboard (Real-time Monitoring)
-├─ Revenue Genie Space (Natural Language Analytics)
-└─ Autonomous Jobs (Slice Provisioning + SMS Campaigns)
+┌─ Network Operations Dashboard (B2B Utilization vs. Contracted Bandwidth)
+├─ Revenue Genie Space (NL Analytics: ARR at risk, upsell pipeline, churn)
+└─ Autonomous Jobs (Burst Provisioning + Upsell Proposal Delivery)
     ↓
-Business Outcomes (Revenue + SLA Compliance + Customer Satisfaction)
+Business Outcomes (Upsell ARR + Churn Prevention + SLA Compliance)
 ```
 
 ## Audience Adaptations
 
 ### C-Suite
 
-**Focus**: "This isn't just a technology demo—it's a business transformation. We're showing how AI converts your biggest operational challenge into your largest revenue opportunity. The $6.2M ARR from a single event represents just 0.01% of your major events annually. Scale this across your full event calendar, and you're looking at hundreds of millions in incremental revenue while eliminating SLA penalties and customer churn."
+**Focus**: "This transforms your biggest operational risk—enterprise SLA violations—into your largest upsell opportunity. Every time the network gets stressed during a major event, you currently absorb $1.8M in credits and non-renewals. This platform flips that into $2.6M of value per event: new contract ARR and protected renewals. Scale this across your full event calendar, and you're talking about tens of millions in incremental annual revenue while eliminating SLA exposure."
 
-**Key Metrics**: ROI of 312% in first year, $18M cost avoidance, competitive differentiation through proactive service delivery.
+**Key Metrics**: $2.6M event revenue swing, 62% B2B upsell acceptance, $0 SLA credits vs. $1.8M historical baseline.
 
 ### Technical Leadership
 
-**Focus**: "The architecture demonstrates Databricks' unified platform handling real-time streaming at telecom scale—50M records daily with sub-30-second latency. Spark Declarative Pipelines provide the medallion architecture, Model Serving deploys NWDAF functions, and Jobs orchestrate autonomous workflows. The system scales horizontally with serverless compute and uses Liquid Clustering for optimal performance on time-series data."
+**Focus**: "The architecture handles real-time slice utilization tracking at telecom scale—35 enterprise accounts, 8 serving towers, 1-second telemetry intervals—through Spark Declarative Pipelines' medallion architecture. The new `utilization_pct` metric on bronze_network_slices is the key signal: it's the ratio of current to contracted bandwidth, computed per slice and streamed into the gold breach-detection layer. Burst slices write back into bronze_network_slices transactionally via Jobs, closing the loop without any external integration."
 
-**Key Capabilities**: Real-time ML inference, geospatial analytics, streaming aggregations, automated MLOps pipelines.
+**Key Capabilities**: Real-time utilization monitoring, B2B propensity scoring, streaming breach detection, automated burst provisioning.
 
 ### Individual Contributors
 
-**Focus**: "The implementation showcases modern data engineering patterns: streaming tables with CLUSTER BY optimization, window functions for time-series analysis, and geospatial joins using Haversine distance calculations. The NWDAF models use standard telecom KPIs like congestion scoring and QoE metrics. All code is version-controlled through Asset Bundles with dev/prod environments."
+**Focus**: "The implementation adds `contracted_bandwidth_mbps` and `current_bandwidth_mbps` to the bronze slice schema, enabling the silver layer to compute utilization ratios inline. Gold layer breach alerting uses a composite score: upsell propensity (from silver enrichment) weighted 45%, utilization pressure weighted 35%, and congestion prediction bonus 20%. The autonomous job writes burst slices back into bronze, which the SDP pipeline re-reads on its next micro-batch—closed-loop actuation in pure SQL."
 
-**Key Patterns**: Streaming SQL transformations, ML feature engineering, real-time scoring pipelines, automated deployment workflows.
+**Key Patterns**: Schema evolution via auto-merge, utilization-ratio streaming aggregations, multi-signal upsell scoring, B2B-aware burst provisioning.

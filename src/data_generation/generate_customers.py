@@ -1,7 +1,13 @@
 """
-Generate synthetic customer profile data for TelcoMax demo.
+Generate synthetic B2B business customer data for TelcoMax demo.
 Writes to: cmegdemos_catalog.dynamic_slicing_live_event.bronze_customer_profiles
-Target: 500K customers with realistic distributions
+
+Represents the five major stadium business customer segments:
+  - Broadcasters (uplink-heavy, high contract value)
+  - Venue operator (IoT/CCTV/signage)
+  - Security / public safety (priority slice, critical reliability)
+  - Payment processors / ticketing (low latency, high reliability)
+  - Teams, leagues, and sponsors (AR/VR, analytics)
 """
 
 import os
@@ -12,7 +18,6 @@ from datetime import date, timedelta
 CATALOG = "cmegdemos_catalog"
 SCHEMA = "dynamic_slicing_live_event"
 TABLE = f"{CATALOG}.{SCHEMA}.bronze_customer_profiles"
-NUM_CUSTOMERS = 500_000
 SEED = 42
 
 
@@ -25,128 +30,148 @@ def get_spark():
         return DatabricksSession.builder.serverless(True).getOrCreate()
 
 
-def generate_customers(n: int = NUM_CUSTOMERS, seed: int = SEED) -> pd.DataFrame:
+def generate_customers(seed: int = SEED) -> pd.DataFrame:
     rng = np.random.default_rng(seed)
-
-    # Customer IDs
-    customer_ids = [f"CUST-{str(i).zfill(7)}" for i in range(1, n + 1)]
-
-    # Subscription tiers: 60% basic, 30% premium, 10% enterprise
-    tiers = rng.choice(["basic", "premium", "enterprise"], size=n, p=[0.60, 0.30, 0.10])
-
-    # Monthly revenue by tier
-    revenue_map = {"basic": (15, 35), "premium": (60, 120), "enterprise": (200, 500)}
-    monthly_revenue = np.array([
-        rng.uniform(*revenue_map[t]) for t in tiers
-    ])
-
-    # Account start dates (1-8 years ago)
     today = date.today()
-    start_dates = [
-        (today - timedelta(days=int(rng.uniform(30, 2920)))).isoformat()
-        for _ in range(n)
+
+    rows = []
+
+    # ------------------------------------------------------------------
+    # 1. Broadcasters & media rights holders (8 accounts)
+    # ------------------------------------------------------------------
+    broadcasters = [
+        ("BC-ESPN-001",    "ESPN",               "broadcaster", "platinum", 12_000, 500, 8.0),
+        ("BC-FOX-001",     "Fox Sports",          "broadcaster", "platinum", 10_500, 400, 8.0),
+        ("BC-NBC-001",     "NBC Sports",          "broadcaster", "gold",      8_200, 300, 10.0),
+        ("BC-PARA-001",    "Paramount+",          "broadcaster", "gold",      7_500, 250, 10.0),
+        ("BC-TUDN-001",    "TUDN / Univision",    "broadcaster", "gold",      5_800, 200, 12.0),
+        ("BC-APSN-001",    "Apple TV+ Sports",    "broadcaster", "platinum",  9_000, 350, 8.0),
+        ("BC-KOMOn001",    "KOMO News (local)",   "broadcaster", "standard",  1_200,  80, 20.0),
+        ("BC-KIRO-001",    "KIRO 7 (local)",      "broadcaster", "standard",  1_000,  60, 20.0),
     ]
+    for cid, name, ctype, tier, mrv, bw, lat in broadcasters:
+        rows.append(_make_row(rng, today, cid, name, ctype, tier, mrv, bw, lat))
 
-    # Ages: 18-75, skewed toward 25-45
-    ages = rng.integers(18, 76, size=n)
-
-    # Seattle-area ZIP codes (focus for Lumen Field event)
-    seattle_zips = ["98101", "98102", "98103", "98104", "98105", "98106",
-                    "98107", "98108", "98109", "98112", "98115", "98116",
-                    "98117", "98118", "98119", "98121", "98122", "98125",
-                    "98126", "98133", "98136", "98144", "98146", "98155",
-                    "98177", "98178", "98188", "98195", "98199"]
-    other_zips = [f"9{rng.integers(8000, 8999)}" for _ in range(100)]
-    all_zips = seattle_zips + other_zips
-    location_zips = rng.choice(all_zips, size=n)
-
-    # Device types
-    devices = rng.choice(
-        ["iPhone", "Samsung Galaxy", "Google Pixel", "OnePlus", "Motorola", "LG"],
-        size=n,
-        p=[0.35, 0.30, 0.15, 0.08, 0.07, 0.05],
-    )
-
-    # Social influence scores (most 0, some up to 1M, 47 with 10K+)
-    social_scores = np.zeros(n, dtype=int)
-    # ~2% have some following
-    has_social = rng.choice(n, size=int(n * 0.02), replace=False)
-    social_scores[has_social] = rng.integers(100, 5000, size=len(has_social))
-    # 47 influencers with 10K+
-    influencer_idx = rng.choice(has_social, size=47, replace=False)
-    social_scores[influencer_idx] = rng.integers(10_000, 500_000, size=47)
-
-    # Data usage (GB/month)
-    data_usage = np.where(
-        tiers == "enterprise",
-        rng.uniform(50, 200, size=n),
-        np.where(
-            tiers == "premium",
-            rng.uniform(15, 80, size=n),
-            rng.uniform(2, 25, size=n),
-        ),
-    )
-
-    # SLA tiers
-    sla_map = {"basic": "standard", "premium": "gold", "enterprise": "platinum"}
-    sla_tiers = [sla_map[t] for t in tiers]
-
-    # Churn risk (higher for basic, lower for enterprise)
-    churn_base = {"basic": 0.3, "premium": 0.12, "enterprise": 0.04}
-    churn_risk = np.clip(
-        np.array([rng.normal(churn_base[t], 0.1) for t in tiers]), 0.01, 0.99
-    )
-
-    # Last upgrade date
-    last_upgrade = [
-        (today - timedelta(days=int(rng.uniform(0, 730)))).isoformat()
-        if rng.random() > 0.3
-        else None
-        for _ in range(n)
+    # ------------------------------------------------------------------
+    # 2. Stadium / venue operator (2 accounts)
+    # ------------------------------------------------------------------
+    venue_ops = [
+        ("VN-LF-001",  "Lumen Field Ops",          "venue_operator", "gold",     4_500, 300, 15.0),
+        ("VN-AEG-001", "AEG Concessions Ops",      "venue_operator", "standard", 1_800, 120, 25.0),
     ]
+    for cid, name, ctype, tier, mrv, bw, lat in venue_ops:
+        rows.append(_make_row(rng, today, cid, name, ctype, tier, mrv, bw, lat))
 
-    # Support tickets (last 30 days)
-    support_tickets = rng.choice([0, 0, 0, 0, 1, 1, 2, 3, 4, 5], size=n)
+    # ------------------------------------------------------------------
+    # 3. Security & public safety (4 accounts)
+    # ------------------------------------------------------------------
+    security = [
+        ("SC-SPD-001",  "Seattle Police Dept",     "public_safety", "platinum", 3_200, 150, 5.0),
+        ("SC-APG-001",  "Allied Universal Sec",    "public_safety", "gold",     2_100, 100, 8.0),
+        ("SC-EMT-001",  "Seattle Fire / EMS",      "public_safety", "platinum", 2_800, 120, 5.0),
+        ("SC-FBIf001",  "DHS / Federal Security",  "public_safety", "platinum", 4_500, 200, 5.0),
+    ]
+    for cid, name, ctype, tier, mrv, bw, lat in security:
+        rows.append(_make_row(rng, today, cid, name, ctype, tier, mrv, bw, lat))
 
-    df = pd.DataFrame({
-        "customer_id": customer_ids,
-        "subscription_tier": tiers,
-        "monthly_revenue": monthly_revenue.round(2),
-        "account_start_date": pd.to_datetime(start_dates).date,
-        "age": ages,
-        "location_zip": location_zips,
-        "device_type": devices,
-        "social_influence_score": social_scores,
-        "data_usage_gb_monthly": data_usage.round(2),
-        "sla_tier": sla_tiers,
-        "churn_risk_score": churn_risk.round(4),
-        "last_upgrade_date": pd.to_datetime(last_upgrade).date,
-        "support_tickets_30d": support_tickets,
-    })
+    # ------------------------------------------------------------------
+    # 4. Ticketing & payments (15 accounts)
+    # ------------------------------------------------------------------
+    payment_processors = [
+        ("PM-TICK-001", "Ticketmaster Gates",      "payment_processor", "gold",     3_000, 80,  5.0),
+        ("PM-SQR-001",  "Square POS (merch)",      "payment_processor", "gold",     2_200, 60,  5.0),
+        ("PM-SQR-002",  "Square POS (food N)",     "payment_processor", "standard",   800, 30,  8.0),
+        ("PM-SQR-003",  "Square POS (food S)",     "payment_processor", "standard",   800, 30,  8.0),
+        ("PM-SQR-004",  "Square POS (food E)",     "payment_processor", "standard",   800, 30,  8.0),
+        ("PM-SQR-005",  "Square POS (food W)",     "payment_processor", "standard",   800, 30,  8.0),
+        ("PM-CLV-001",  "Clover POS (VIP club)",   "payment_processor", "gold",     1_400, 40,  5.0),
+        ("PM-STR-001",  "Stripe Mobile Pay",       "payment_processor", "gold",     1_600, 50,  5.0),
+        ("PM-AXS-001",  "AXS Mobile Ticketing",    "payment_processor", "gold",     2_500, 70,  8.0),
+        ("PM-VND-001",  "Aramark Kiosks N",        "payment_processor", "standard",   600, 20, 10.0),
+        ("PM-VND-002",  "Aramark Kiosks S",        "payment_processor", "standard",   600, 20, 10.0),
+        ("PM-VND-003",  "Aramark Kiosks E",        "payment_processor", "standard",   600, 20, 10.0),
+        ("PM-VND-004",  "Aramark Kiosks W",        "payment_processor", "standard",   600, 20, 10.0),
+        ("PM-ATM-001",  "Cardtronics ATMs",        "payment_processor", "standard",   400, 15, 15.0),
+        ("PM-PRKG-001", "SP+ Parking Pay",         "payment_processor", "standard",   300, 10, 15.0),
+    ]
+    for cid, name, ctype, tier, mrv, bw, lat in payment_processors:
+        rows.append(_make_row(rng, today, cid, name, ctype, tier, mrv, bw, lat))
 
+    # ------------------------------------------------------------------
+    # 5. Teams, leagues, and sponsors (6 accounts)
+    # ------------------------------------------------------------------
+    teams = [
+        ("TM-USMNT-001", "US Soccer Federation",   "team_sponsor", "platinum", 8_000, 400,  8.0),
+        ("TM-AUSTR-001", "Football Australia",      "team_sponsor", "gold",     3_500, 150, 10.0),
+        ("TM-FIFA-001",  "FIFA / Concacaf Ops",     "team_sponsor", "platinum", 6_000, 250,  8.0),
+        ("TM-NIKE-001",  "Nike Sponsorship Ops",    "team_sponsor", "gold",     2_800, 100, 12.0),
+        ("TM-BFLY-001",  "Butterfly AR Fan App",    "team_sponsor", "gold",     3_200, 200, 10.0),
+        ("TM-STATS-001", "Sportradar Analytics",    "team_sponsor", "gold",     2_400, 120, 10.0),
+    ]
+    for cid, name, ctype, tier, mrv, bw, lat in teams:
+        rows.append(_make_row(rng, today, cid, name, ctype, tier, mrv, bw, lat))
+
+    df = pd.DataFrame(rows)
     return df
+
+
+def _make_row(rng, today, customer_id, company_name, customer_type, contract_tier,
+              monthly_contract_value, contracted_bandwidth_mbps, contracted_latency_ms):
+    sla_map = {"standard": "standard", "gold": "gold", "platinum": "platinum"}
+
+    # Churn risk: higher for standard tier accounts with older contracts
+    base_churn = {"platinum": 0.04, "gold": 0.10, "standard": 0.22}
+    churn_risk = float(np.clip(rng.normal(base_churn[contract_tier], 0.06), 0.01, 0.95))
+
+    # Contract start (1–5 years ago)
+    contract_start = today - timedelta(days=int(rng.uniform(365, 1825)))
+
+    # Renewal in 1–18 months (shorter = higher upsell urgency)
+    renewal_months = int(rng.uniform(1, 19))
+
+    # Support tickets in last 30 days
+    support_tickets = int(rng.choice([0, 0, 0, 1, 1, 2, 3], p=[0.4, 0.2, 0.15, 0.1, 0.08, 0.05, 0.02]))
+
+    # Peak historical utilization (% of contracted bandwidth)
+    # — broadcasters and payment processors tend to run close to limit during events
+    if customer_type in ("broadcaster", "payment_processor"):
+        peak_util = float(np.clip(rng.normal(0.80, 0.10), 0.50, 0.99))
+    else:
+        peak_util = float(np.clip(rng.normal(0.65, 0.12), 0.30, 0.95))
+
+    return {
+        "customer_id": customer_id,
+        "company_name": company_name,
+        "customer_type": customer_type,
+        "contract_tier": contract_tier,
+        "monthly_contract_value": monthly_contract_value,
+        "contracted_bandwidth_mbps": contracted_bandwidth_mbps,
+        "contracted_latency_ms": contracted_latency_ms,
+        "sla_tier": sla_map[contract_tier],
+        "churn_risk_score": round(churn_risk, 4),
+        "contract_start_date": contract_start.isoformat(),
+        "contract_renewal_months": renewal_months,
+        "support_tickets_30d": support_tickets,
+        "peak_event_utilization_pct": round(peak_util, 4),
+        "account_manager_id": f"AM-{int(rng.integers(100, 999))}",
+    }
 
 
 def main():
     spark = get_spark()
     print(f"Spark version: {spark.version}")
 
-    print(f"Generating {NUM_CUSTOMERS:,} customer profiles...")
+    print("Generating B2B business customer profiles...")
     df_pandas = generate_customers()
-    print(f"  Tier distribution:\n{df_pandas['subscription_tier'].value_counts()}")
-    influencers = (df_pandas["social_influence_score"] >= 10_000).sum()
-    print(f"  Influencers (10K+ followers): {influencers}")
+    print(f"  Generated {len(df_pandas):,} business customers")
+    print(f"  Type distribution:\n{df_pandas['customer_type'].value_counts()}")
+    print(f"  Contract tier distribution:\n{df_pandas['contract_tier'].value_counts()}")
+    print(f"  Total contracted bandwidth: {df_pandas['contracted_bandwidth_mbps'].sum():,} Mbps")
+    print(f"  Total monthly contract value: ${df_pandas['monthly_contract_value'].sum():,}")
 
-    # Write in chunks for large datasets
-    print(f"Writing to {TABLE}...")
-    chunk_size = 100_000
-    for i in range(0, len(df_pandas), chunk_size):
-        chunk = df_pandas.iloc[i:i + chunk_size]
-        df_spark = spark.createDataFrame(chunk)
-        mode = "overwrite" if i == 0 else "append"
-        opts = {"overwriteSchema": "true"} if i == 0 else {}
-        df_spark.write.mode(mode).options(**opts).saveAsTable(TABLE)
-        print(f"  Written {min(i + chunk_size, len(df_pandas)):,} / {len(df_pandas):,} rows")
+    print(f"\nWriting to {TABLE}...")
+    df_spark = spark.createDataFrame(df_pandas)
+    df_spark.write.mode("overwrite").option("overwriteSchema", "true").saveAsTable(TABLE)
 
     count = spark.table(TABLE).count()
     print(f"Verified: {count:,} rows in {TABLE}")

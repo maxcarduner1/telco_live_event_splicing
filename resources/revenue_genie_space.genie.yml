@@ -5,13 +5,38 @@ resources:
 # The configuration below documents the Genie Space settings for reference.
 # To create programmatically, use the Databricks SDK or REST API after deployment.
 #
-# Genie Space: TelcoMax Revenue Optimization Analytics
-# Tables: gold_revenue_analytics, gold_conversion_opportunities, event_revenue_summary, sms_campaign_log
+# Genie Space: TelcoMax B2B Revenue & Network Intelligence
+# Tables:
+#   - gold_revenue_analytics       — B2B upsell ARR, churn risk, segment metrics
+#   - gold_conversion_opportunities — per-account bandwidth utilization, breach risk, upsell scores
+#   - event_revenue_summary         — event-level outcomes: upsell ARR, churn protection, acceptance rate
+#   - upsell_proposal_log           — record of every upsell proposal sent and accepted/declined
+#   - gold_congestion_features      — tower congestion scores, bandwidth utilization, predictions
+#   - bronze_network_slices         — raw slice inventory including burst slices provisioned
 #
 # Example questions to demonstrate:
-#   "How much revenue did we generate from the USMNT match?"
-#   "Which customer segments have the highest conversion rates during sporting events?"
-#   "What's our projected ARR from all events this month?"
-#   "How many premium slices did we provision during the Lumen Field event?"
-#   "Which influencers converted and what's their total social reach?"
-#   "Compare conversion rates between high_value_influencer and standard segments"
+#
+# Revenue & Upsell:
+#   "How much upsell ARR did we generate from the USMNT match?"
+#   "What is the total ARR we protected from churn during the event?"
+#   "Which B2B customer segments have the highest upsell acceptance rates?"
+#   "What's the projected annual upsell value from tonight's event?"
+#   "Show me the top 10 accounts by monthly revenue opportunity"
+#
+# Bandwidth & SLA Risk:
+#   "Which B2B accounts are closest to breaching their contracted bandwidth?"
+#   "How many accounts hit critical breach risk during the 73rd-minute goal spike?"
+#   "What is the average bandwidth utilization for broadcasters right now?"
+#   "List all accounts with utilization above 90% and their breach risk level"
+#   "Which payment processors are at risk of SLA breach?"
+#
+# Network Operations:
+#   "How many burst slices did we provision during the USMNT match?"
+#   "Which towers are experiencing congestion right now?"
+#   "Show bandwidth utilization trends for Lumen Field towers over the match"
+#   "How many upsell proposals were sent vs accepted by customer type?"
+#
+# Segment Analysis:
+#   "Compare upsell scores across the five B2B customer segments"
+#   "Which segment — media_rights, venue_ops, critical_services, payments_ticketing, or teams_sponsors — has the most accounts at churn risk?"
+#   "What is the average contracted bandwidth for broadcasters vs payment processors?"

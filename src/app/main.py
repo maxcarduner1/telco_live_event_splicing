@@ -1,6 +1,9 @@
 """
-TelcoMax Dynamic 5G Network Slicing - Live Event Visualization
-FastAPI backend serving data from Databricks SQL Warehouse
+TelcoMax Dynamic 5G Network Slicing - Live Event Visualization (B2B Edition)
+FastAPI backend serving data from Databricks SQL Warehouse.
+
+Customer model: B2B stadium business accounts (broadcasters, venue ops,
+security, payment processors, teams/sponsors) — not individual consumers.
 """
 
 import os
@@ -35,6 +38,45 @@ TOWER_POSITIONS = {
 }
 STADIUM_CENTER = (47.5952, -122.3316)
 
+# All 35 B2B accounts with their types and assigned towers (for demo fallback)
+B2B_ACCOUNTS = [
+    ("BC-ESPN-001",    "ESPN",               "broadcaster",       "SEA-LF-001"),
+    ("BC-FOX-001",     "Fox Sports",          "broadcaster",       "SEA-LF-001"),
+    ("BC-NBC-001",     "NBC Sports",          "broadcaster",       "SEA-LF-002"),
+    ("BC-PARA-001",    "Paramount+",          "broadcaster",       "SEA-LF-002"),
+    ("BC-TUDN-001",    "TUDN / Univision",    "broadcaster",       "SEA-LF-003"),
+    ("BC-APSN-001",    "Apple TV+ Sports",    "broadcaster",       "SEA-LF-003"),
+    ("BC-KOMOn001",    "KOMO News",           "broadcaster",       "SEA-LF-004"),
+    ("BC-KIRO-001",    "KIRO 7",              "broadcaster",       "SEA-LF-004"),
+    ("VN-LF-001",      "Lumen Field Ops",     "venue_operator",    "SEA-LF-005"),
+    ("VN-AEG-001",     "AEG Concessions",     "venue_operator",    "SEA-LF-005"),
+    ("SC-SPD-001",     "Seattle Police Dept", "public_safety",     "SEA-LF-006"),
+    ("SC-APG-001",     "Allied Universal",    "public_safety",     "SEA-LF-006"),
+    ("SC-EMT-001",     "Seattle Fire/EMS",    "public_safety",     "SEA-LF-007"),
+    ("SC-FBIf001",     "DHS Security",        "public_safety",     "SEA-LF-007"),
+    ("PM-TICK-001",    "Ticketmaster Gates",  "payment_processor", "SEA-LF-001"),
+    ("PM-SQR-001",     "Square POS (merch)",  "payment_processor", "SEA-LF-002"),
+    ("PM-SQR-002",     "Square POS (N)",      "payment_processor", "SEA-LF-003"),
+    ("PM-SQR-003",     "Square POS (S)",      "payment_processor", "SEA-LF-004"),
+    ("PM-SQR-004",     "Square POS (E)",      "payment_processor", "SEA-LF-005"),
+    ("PM-SQR-005",     "Square POS (W)",      "payment_processor", "SEA-LF-006"),
+    ("PM-CLV-001",     "Clover POS (VIP)",    "payment_processor", "SEA-LF-007"),
+    ("PM-STR-001",     "Stripe Mobile Pay",   "payment_processor", "SEA-LF-008"),
+    ("PM-AXS-001",     "AXS Ticketing",       "payment_processor", "SEA-LF-001"),
+    ("PM-VND-001",     "Aramark Kiosks N",    "payment_processor", "SEA-LF-002"),
+    ("PM-VND-002",     "Aramark Kiosks S",    "payment_processor", "SEA-LF-003"),
+    ("PM-VND-003",     "Aramark Kiosks E",    "payment_processor", "SEA-LF-004"),
+    ("PM-VND-004",     "Aramark Kiosks W",    "payment_processor", "SEA-LF-005"),
+    ("PM-ATM-001",     "Cardtronics ATMs",    "payment_processor", "SEA-LF-006"),
+    ("PM-PRKG-001",    "SP+ Parking Pay",     "payment_processor", "SEA-LF-007"),
+    ("TM-USMNT-001",   "US Soccer Fed",       "team_sponsor",      "SEA-LF-008"),
+    ("TM-AUSTR-001",   "Football Australia",  "team_sponsor",      "SEA-LF-001"),
+    ("TM-FIFA-001",    "FIFA / Concacaf",     "team_sponsor",      "SEA-LF-002"),
+    ("TM-NIKE-001",    "Nike Sponsor Ops",    "team_sponsor",      "SEA-LF-003"),
+    ("TM-BFLY-001",    "Butterfly AR App",    "team_sponsor",      "SEA-LF-004"),
+    ("TM-STATS-001",   "Sportradar",          "team_sponsor",      "SEA-LF-005"),
+]
+
 # Simulation: 30 steps representing the match timeline
 TOTAL_SIMULATION_STEPS = 30
 
@@ -48,7 +90,6 @@ def _get_host() -> str:
 
 def _get_token() -> str:
     """Get auth token - Apps OAuth (DATABRICKS_CLIENT_ID/SECRET), env var, or SDK."""
-    # Databricks Apps: use service principal OAuth via SDK (preferred)
     try:
         from databricks.sdk import WorkspaceClient
         from databricks.sdk.config import Config
@@ -58,7 +99,6 @@ def _get_token() -> str:
             return headers["Authorization"].replace("Bearer ", "")
     except Exception:
         pass
-    # Fallback: static token env var
     token = os.environ.get("DATABRICKS_TOKEN")
     if token:
         return token
@@ -66,7 +106,6 @@ def _get_token() -> str:
 
 
 def get_connection():
-    """Create a fresh Databricks SQL connection."""
     return databricks_sql.connect(
         server_hostname=_get_host().replace("https://", ""),
         http_path=WAREHOUSE_HTTP_PATH,
@@ -75,7 +114,6 @@ def get_connection():
 
 
 def execute_query(sql: str, params=None):
-    """Execute SQL and return list of dicts."""
     conn = get_connection()
     try:
         cursor = conn.cursor()
@@ -92,7 +130,6 @@ def execute_query(sql: str, params=None):
 # ---------------------------------------------------------------------------
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Warm-up: verify connectivity
     try:
         execute_query("SELECT 1")
         print("[OK] Databricks SQL connection verified")
@@ -104,7 +141,7 @@ async def lifespan(app: FastAPI):
 # ---------------------------------------------------------------------------
 # FastAPI App
 # ---------------------------------------------------------------------------
-app = FastAPI(title="TelcoMax Live Event", lifespan=lifespan)
+app = FastAPI(title="TelcoMax Live Event — B2B Edition", lifespan=lifespan)
 
 
 # ---------------------------------------------------------------------------
@@ -113,24 +150,20 @@ app = FastAPI(title="TelcoMax Live Event", lifespan=lifespan)
 
 @app.get("/api/kpis")
 def get_kpis():
-    """Return all KPI numbers for the top bar."""
+    """Return all KPI numbers for the top bar (B2B edition)."""
     try:
-        # Customers near venue
         r1 = execute_query(f"""
             SELECT COUNT(DISTINCT customer_id) AS cnt
             FROM {CATALOG_SCHEMA}.gold_conversion_opportunities
-            WHERE near_event_flag = 1
         """)
-        customers_near = r1[0]["cnt"] if r1 else 0
+        accounts_at_risk = r1[0]["cnt"] if r1 else 0
 
-        # Active towers
         r2 = execute_query(f"""
             SELECT COUNT(DISTINCT tower_id) AS cnt
             FROM {CATALOG_SCHEMA}.bronze_cell_tower_telemetry
         """)
         active_towers = r2[0]["cnt"] if r2 else 0
 
-        # Towers in congestion
         r3 = execute_query(f"""
             SELECT COUNT(DISTINCT tower_id) AS cnt
             FROM {CATALOG_SCHEMA}.gold_congestion_features
@@ -138,46 +171,51 @@ def get_kpis():
         """)
         towers_congested = r3[0]["cnt"] if r3 else 0
 
-        # Offers sent
         r4 = execute_query(f"""
             SELECT COUNT(*) AS cnt
-            FROM {CATALOG_SCHEMA}.sms_campaign_log
+            FROM {CATALOG_SCHEMA}.upsell_proposal_log
         """)
-        offers_sent = r4[0]["cnt"] if r4 else 0
+        proposals_sent = r4[0]["cnt"] if r4 else 0
 
-        # Converted
         r5 = execute_query(f"""
             SELECT COUNT(*) AS cnt
-            FROM {CATALOG_SCHEMA}.sms_campaign_log
-            WHERE converted = true
+            FROM {CATALOG_SCHEMA}.upsell_proposal_log
+            WHERE accepted = true
         """)
-        converted = r5[0]["cnt"] if r5 else 0
+        proposals_accepted = r5[0]["cnt"] if r5 else 0
 
-        # Projected ARR
         r6 = execute_query(f"""
-            SELECT projected_arr_usd
+            SELECT projected_upsell_arr_usd
             FROM {CATALOG_SCHEMA}.event_revenue_summary
             ORDER BY summary_generated_at DESC
             LIMIT 1
         """)
-        projected_arr = float(r6[0]["projected_arr_usd"]) if r6 else 0
+        upsell_arr = float(r6[0]["projected_upsell_arr_usd"]) if r6 else 0
 
-        # Active premium slices
         r7 = execute_query(f"""
+            SELECT arr_protected_from_churn_usd
+            FROM {CATALOG_SCHEMA}.event_revenue_summary
+            ORDER BY summary_generated_at DESC
+            LIMIT 1
+        """)
+        arr_protected = float(r7[0]["arr_protected_from_churn_usd"]) if r7 else 0
+
+        r8 = execute_query(f"""
             SELECT COUNT(*) AS cnt
             FROM {CATALOG_SCHEMA}.bronze_network_slices
-            WHERE status = 'active' AND slice_type = 'premium_streaming'
+            WHERE status = 'active' AND slice_type LIKE '%_burst'
         """)
-        active_slices = r7[0]["cnt"] if r7 else 0
+        burst_slices = r8[0]["cnt"] if r8 else 0
 
         return {
-            "customers_near": customers_near,
+            "accounts_at_risk": accounts_at_risk,
             "active_towers": active_towers,
             "towers_congested": towers_congested,
-            "offers_sent": offers_sent,
-            "converted": converted,
-            "projected_arr": projected_arr,
-            "active_slices": active_slices,
+            "proposals_sent": proposals_sent,
+            "proposals_accepted": proposals_accepted,
+            "upsell_arr": upsell_arr,
+            "arr_protected": arr_protected,
+            "burst_slices": burst_slices,
         }
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
@@ -240,7 +278,6 @@ def get_towers():
                 "bandwidth_trend_15min": str(row.get("bandwidth_trend_15min", "")),
             })
 
-        # Fill in any missing towers with defaults
         seen = {t["tower_id"] for t in towers}
         for tid, (lat, lon) in TOWER_POSITIONS.items():
             if tid not in seen:
@@ -265,49 +302,51 @@ def get_towers():
 
 @app.get("/api/customers")
 def get_customers():
-    """Return customer positions scattered around towers for map dots."""
+    """Return B2B business customer positions and upsell status for map dots."""
     try:
         rows = execute_query(f"""
             SELECT
-                customer_id,
-                customer_segment,
-                conversion_score,
-                near_event_flag,
-                tower_id,
-                avg_congestion_score,
-                congestion_predicted_15min,
-                monthly_revenue_opportunity
-            FROM {CATALOG_SCHEMA}.gold_conversion_opportunities
-            WHERE near_event_flag = 1
-            ORDER BY conversion_score DESC
-            LIMIT 200
+                oc.customer_id,
+                oc.company_name,
+                oc.customer_type,
+                oc.customer_segment,
+                oc.conversion_score,
+                oc.utilization_pct,
+                oc.breach_risk_level,
+                oc.tower_id,
+                oc.contracted_bandwidth_mbps,
+                oc.current_bandwidth_mbps,
+                oc.monthly_revenue_opportunity,
+                oc.monthly_contract_value
+            FROM {CATALOG_SCHEMA}.gold_conversion_opportunities oc
+            ORDER BY oc.conversion_score DESC
         """)
 
         customers = []
         for row in rows:
             tid = row.get("tower_id", "")
             base_lat, base_lon = TOWER_POSITIONS.get(tid, STADIUM_CENTER)
-
-            # Deterministic scatter based on customer_id
             seed = int(hashlib.md5(str(row["customer_id"]).encode()).hexdigest()[:8], 16)
             rng = random.Random(seed)
-            offset_lat = rng.uniform(-0.0015, 0.0015)
-            offset_lon = rng.uniform(-0.0015, 0.0015)
-
-            show_offer = (
-                _to_float(row.get("conversion_score")) > 0.7
-                and row.get("near_event_flag") == 1
-            )
-
+            offset_lat = rng.uniform(-0.0010, 0.0010)
+            offset_lon = rng.uniform(-0.0010, 0.0010)
+            show_proposal = _to_float(row.get("conversion_score")) > 0.65
             customers.append({
                 "customer_id": str(row["customer_id"]),
-                "customer_segment": str(row.get("customer_segment", "standard")),
+                "company_name": str(row.get("company_name", row["customer_id"])),
+                "customer_type": str(row.get("customer_type", "other")),
+                "customer_segment": str(row.get("customer_segment", "other")),
                 "latitude": base_lat + offset_lat,
                 "longitude": base_lon + offset_lon,
                 "conversion_score": _to_float(row.get("conversion_score")),
+                "utilization_pct": _to_float(row.get("utilization_pct")),
+                "breach_risk_level": str(row.get("breach_risk_level", "watch")),
                 "tower_id": tid,
-                "show_offer": show_offer,
+                "show_proposal": show_proposal,
+                "contracted_bandwidth_mbps": _to_float(row.get("contracted_bandwidth_mbps")),
+                "current_bandwidth_mbps": _to_float(row.get("current_bandwidth_mbps")),
                 "monthly_revenue_opportunity": _to_float(row.get("monthly_revenue_opportunity")),
+                "monthly_contract_value": _to_float(row.get("monthly_contract_value")),
             })
 
         return {"customers": customers}
@@ -319,51 +358,42 @@ def get_customers():
 def get_feed():
     """Return last 20 events for the live feed panel."""
     try:
-        # Recent offers
-        offers = execute_query(f"""
-            SELECT
-                customer_id,
-                customer_segment,
-                subscription_tier,
-                monthly_revenue_opportunity,
-                converted,
-                sent_at
-            FROM {CATALOG_SCHEMA}.sms_campaign_log
+        proposals = execute_query(f"""
+            SELECT customer_id, company_name, customer_type,
+                   monthly_revenue_opportunity, accepted, sent_at,
+                   utilization_pct, breach_risk_level
+            FROM {CATALOG_SCHEMA}.upsell_proposal_log
             ORDER BY sent_at DESC
             LIMIT 15
         """)
 
-        # Recent congestion alerts
         alerts = execute_query(f"""
-            SELECT
-                tower_id,
-                window_start,
-                avg_congestion_score,
-                peak_bandwidth_util,
-                congestion_predicted_15min
+            SELECT tower_id, window_start, avg_congestion_score,
+                   peak_bandwidth_util, congestion_predicted_15min
             FROM {CATALOG_SCHEMA}.gold_congestion_features
             WHERE congestion_predicted_15min = 1
             ORDER BY window_start DESC
-            LIMIT 10
+            LIMIT 8
         """)
 
         feed = []
-        for o in offers:
-            icon = "trophy" if o.get("converted") else "offer"
+        for p in proposals:
+            icon = "accepted" if p.get("accepted") else "proposal"
+            util = _to_float(p.get("utilization_pct", 0))
+            company = p.get("company_name") or str(p["customer_id"])[:12]
             feed.append({
                 "type": icon,
-                "message": f"{'Converted!' if o.get('converted') else 'Offer sent to'} Customer {str(o['customer_id'])[:8]}... ({o.get('customer_segment', 'standard')}) - ${_to_float(o.get('monthly_revenue_opportunity', 0)):.0f}/mo",
-                "timestamp": str(o.get("sent_at", "")),
+                "message": f"{'Accepted!' if p.get('accepted') else 'Proposal sent to'} {company} \u2014 {util:.0f}% util \u2014 +${_to_float(p.get('monthly_revenue_opportunity', 0)):.0f}/mo",
+                "timestamp": str(p.get("sent_at", "")),
             })
 
         for a in alerts:
             feed.append({
                 "type": "congestion",
-                "message": f"Congestion predicted on {a['tower_id']} - Peak BW {_to_float(a.get('peak_bandwidth_util', 0)):.0f}% - Slice provisioned",
+                "message": f"Congestion predicted on {a['tower_id']} \u2014 Peak BW {_to_float(a.get('peak_bandwidth_util', 0)):.0f}% \u2014 Burst slice provisioned",
                 "timestamp": str(a.get("window_start", "")),
             })
 
-        # Sort by timestamp descending, take 20
         feed.sort(key=lambda x: x["timestamp"], reverse=True)
         return {"feed": feed[:20]}
     except Exception as e:
@@ -372,16 +402,10 @@ def get_feed():
 
 @app.get("/api/simulation/step/{step}")
 def get_simulation_step(step: int):
-    """
-    Return a data snapshot for simulation step 0-29.
-    We partition the telemetry timestamps into 30 windows and return data
-    for the requested window, plus progressive customer reveals.
-    """
     if step < 0 or step >= TOTAL_SIMULATION_STEPS:
         raise HTTPException(status_code=400, detail=f"Step must be 0-{TOTAL_SIMULATION_STEPS - 1}")
 
     try:
-        # Get the time range of the data
         time_range = execute_query(f"""
             SELECT MIN(timestamp) AS min_ts, MAX(timestamp) AS max_ts
             FROM {CATALOG_SCHEMA}.bronze_cell_tower_telemetry
@@ -390,30 +414,22 @@ def get_simulation_step(step: int):
         if not time_range or not time_range[0].get("min_ts"):
             return _demo_simulation_step(step)
 
-        min_ts = time_range[0]["min_ts"]
-        max_ts = time_range[0]["max_ts"]
-
-        # Get tower data for this time window
         towers_data = execute_query(f"""
             WITH time_bounds AS (
-                SELECT
-                    MIN(timestamp) AS min_ts,
-                    MAX(timestamp) AS max_ts,
-                    (UNIX_TIMESTAMP(MAX(timestamp)) - UNIX_TIMESTAMP(MIN(timestamp))) / {TOTAL_SIMULATION_STEPS} AS step_seconds
+                SELECT MIN(timestamp) AS min_ts, MAX(timestamp) AS max_ts,
+                       (UNIX_TIMESTAMP(MAX(timestamp)) - UNIX_TIMESTAMP(MIN(timestamp))) / {TOTAL_SIMULATION_STEPS} AS step_seconds
                 FROM {CATALOG_SCHEMA}.bronze_cell_tower_telemetry
             ),
             step_window AS (
-                SELECT
-                    TIMESTAMP(FROM_UNIXTIME(UNIX_TIMESTAMP(min_ts) + {step} * step_seconds)) AS window_start,
-                    TIMESTAMP(FROM_UNIXTIME(UNIX_TIMESTAMP(min_ts) + ({step} + 1) * step_seconds)) AS window_end
+                SELECT TIMESTAMP(FROM_UNIXTIME(UNIX_TIMESTAMP(min_ts) + {step} * step_seconds)) AS window_start,
+                       TIMESTAMP(FROM_UNIXTIME(UNIX_TIMESTAMP(min_ts) + ({step} + 1) * step_seconds)) AS window_end
                 FROM time_bounds
             )
-            SELECT
-                t.tower_id,
-                AVG(t.bandwidth_utilization_pct) AS bandwidth_utilization_pct,
-                MAX(t.active_connections) AS active_connections,
-                AVG(t.latency_ms) AS latency_ms,
-                AVG(t.bandwidth_utilization_pct) / 100.0 AS congestion_score
+            SELECT t.tower_id,
+                   AVG(t.bandwidth_utilization_pct) AS bandwidth_utilization_pct,
+                   MAX(t.active_connections) AS active_connections,
+                   AVG(t.latency_ms) AS latency_ms,
+                   AVG(t.bandwidth_utilization_pct) / 100.0 AS congestion_score
             FROM {CATALOG_SCHEMA}.bronze_cell_tower_telemetry t
             CROSS JOIN step_window sw
             WHERE t.tower_id LIKE 'SEA-LF-%'
@@ -422,16 +438,13 @@ def get_simulation_step(step: int):
             GROUP BY t.tower_id
         """)
 
-        # Build tower list with positions
         towers = []
         for row in towers_data:
             tid = row["tower_id"]
             lat, lon = TOWER_POSITIONS.get(tid, STADIUM_CENTER)
             bw_util = _to_float(row.get("bandwidth_utilization_pct"))
             towers.append({
-                "tower_id": tid,
-                "latitude": lat,
-                "longitude": lon,
+                "tower_id": tid, "latitude": lat, "longitude": lon,
                 "bandwidth_utilization_pct": bw_util,
                 "active_connections": _to_int(row.get("active_connections")),
                 "latency_ms": _to_float(row.get("latency_ms")),
@@ -439,14 +452,11 @@ def get_simulation_step(step: int):
                 "congestion_predicted_15min": bw_util > 70,
             })
 
-        # Fill missing towers
         seen = {t["tower_id"] for t in towers}
         for tid, (lat, lon) in TOWER_POSITIONS.items():
             if tid not in seen:
                 towers.append({
-                    "tower_id": tid,
-                    "latitude": lat,
-                    "longitude": lon,
+                    "tower_id": tid, "latitude": lat, "longitude": lon,
                     "bandwidth_utilization_pct": random.uniform(10, 30),
                     "active_connections": random.randint(50, 150),
                     "latency_ms": random.uniform(5, 15),
@@ -454,20 +464,14 @@ def get_simulation_step(step: int):
                     "congestion_predicted_15min": False,
                 })
 
-        # Progressive customer reveals: step 0 shows ~20, step 29 shows ~200
-        customer_count = min(200, max(20, int(20 + (step / (TOTAL_SIMULATION_STEPS - 1)) * 180)))
+        progress = (step + 1) / TOTAL_SIMULATION_STEPS
         customers_data = execute_query(f"""
-            SELECT
-                customer_id,
-                customer_segment,
-                conversion_score,
-                near_event_flag,
-                tower_id,
-                monthly_revenue_opportunity
+            SELECT customer_id, company_name, customer_type, customer_segment,
+                   conversion_score, utilization_pct, breach_risk_level,
+                   tower_id, contracted_bandwidth_mbps, current_bandwidth_mbps,
+                   monthly_revenue_opportunity, monthly_contract_value
             FROM {CATALOG_SCHEMA}.gold_conversion_opportunities
-            WHERE near_event_flag = 1
             ORDER BY conversion_score DESC
-            LIMIT {customer_count}
         """)
 
         customers = []
@@ -475,95 +479,76 @@ def get_simulation_step(step: int):
             tid = row.get("tower_id", "")
             base_lat, base_lon = TOWER_POSITIONS.get(tid, STADIUM_CENTER)
             seed = int(hashlib.md5(str(row["customer_id"]).encode()).hexdigest()[:8], 16)
-            rng = random.Random(seed)
-
-            # Customers converge toward stadium as simulation progresses
-            progress = step / max(1, TOTAL_SIMULATION_STEPS - 1)
-            spread = 0.0020 * (1 - progress * 0.6)
-            offset_lat = rng.uniform(-spread, spread)
-            offset_lon = rng.uniform(-spread, spread)
-
+            rng = random.Random(seed + step)
+            offset_lat = rng.uniform(-0.0010, 0.0010)
+            offset_lon = rng.uniform(-0.0010, 0.0010)
             conv_score = _to_float(row.get("conversion_score"))
-            # Show offers progressively in later steps for high-score customers
-            show_offer = conv_score > 0.7 and step >= 10 and rng.random() < progress
-
+            show_proposal = conv_score > 0.65 and step >= 12 and rng.random() < progress
             customers.append({
                 "customer_id": str(row["customer_id"]),
-                "customer_segment": str(row.get("customer_segment", "standard")),
+                "company_name": str(row.get("company_name", row["customer_id"])),
+                "customer_type": str(row.get("customer_type", "other")),
+                "customer_segment": str(row.get("customer_segment", "other")),
                 "latitude": base_lat + offset_lat,
                 "longitude": base_lon + offset_lon,
                 "conversion_score": conv_score,
+                "utilization_pct": _to_float(row.get("utilization_pct")),
+                "breach_risk_level": str(row.get("breach_risk_level", "watch")),
                 "tower_id": tid,
-                "show_offer": show_offer,
+                "show_proposal": show_proposal,
+                "contracted_bandwidth_mbps": _to_float(row.get("contracted_bandwidth_mbps")),
+                "current_bandwidth_mbps": _to_float(row.get("current_bandwidth_mbps")),
                 "monthly_revenue_opportunity": _to_float(row.get("monthly_revenue_opportunity")),
+                "monthly_contract_value": _to_float(row.get("monthly_contract_value")),
             })
 
-        # Build KPIs that progress with the simulation
-        base_offers = max(1, int(step / TOTAL_SIMULATION_STEPS * 200))
-        base_converted = max(0, int(base_offers * 0.35))
+        kpi_proposals = execute_query(f"SELECT COUNT(*) AS cnt FROM {CATALOG_SCHEMA}.upsell_proposal_log")
+        kpi_accepted  = execute_query(f"SELECT COUNT(*) AS cnt FROM {CATALOG_SCHEMA}.upsell_proposal_log WHERE accepted = true")
+        kpi_arr = execute_query(f"SELECT projected_upsell_arr_usd, arr_protected_from_churn_usd FROM {CATALOG_SCHEMA}.event_revenue_summary ORDER BY summary_generated_at DESC LIMIT 1")
+        kpi_bursts = execute_query(f"SELECT COUNT(*) AS cnt FROM {CATALOG_SCHEMA}.bronze_network_slices WHERE status = 'active' AND slice_type LIKE '%_burst'")
 
-        # Fetch actual counts scaled to step
-        kpi_offers = execute_query(f"""
-            SELECT COUNT(*) AS cnt FROM {CATALOG_SCHEMA}.sms_campaign_log
-        """)
-        kpi_converted = execute_query(f"""
-            SELECT COUNT(*) AS cnt FROM {CATALOG_SCHEMA}.sms_campaign_log WHERE converted = true
-        """)
-        kpi_arr = execute_query(f"""
-            SELECT projected_arr_usd FROM {CATALOG_SCHEMA}.event_revenue_summary
-            ORDER BY summary_generated_at DESC LIMIT 1
-        """)
-        kpi_slices = execute_query(f"""
-            SELECT COUNT(*) AS cnt FROM {CATALOG_SCHEMA}.bronze_network_slices
-            WHERE status = 'active' AND slice_type = 'premium_streaming'
-        """)
-
-        total_offers = _to_int((kpi_offers[0] if kpi_offers else {}).get("cnt", 0))
-        total_converted = _to_int((kpi_converted[0] if kpi_converted else {}).get("cnt", 0))
-        total_arr = _to_float((kpi_arr[0] if kpi_arr else {}).get("projected_arr_usd", 0))
-        total_slices = _to_int((kpi_slices[0] if kpi_slices else {}).get("cnt", 0))
-
-        # Scale KPIs to step progress
-        progress = (step + 1) / TOTAL_SIMULATION_STEPS
+        total_proposals = _to_int((kpi_proposals[0] if kpi_proposals else {}).get("cnt", 0))
+        total_accepted  = _to_int((kpi_accepted[0] if kpi_accepted else {}).get("cnt", 0))
+        total_upsell_arr = _to_float((kpi_arr[0] if kpi_arr else {}).get("projected_upsell_arr_usd", 0))
+        total_arr_protected = _to_float((kpi_arr[0] if kpi_arr else {}).get("arr_protected_from_churn_usd", 0))
+        total_bursts = _to_int((kpi_bursts[0] if kpi_bursts else {}).get("cnt", 0))
         congested_count = sum(1 for t in towers if t.get("congestion_predicted_15min"))
 
         kpis = {
-            "customers_near": customer_count,
+            "accounts_at_risk": len(customers_data),
             "active_towers": len(towers),
             "towers_congested": congested_count,
-            "offers_sent": int(total_offers * progress),
-            "converted": int(total_converted * progress),
-            "projected_arr": total_arr * progress,
-            "active_slices": max(0, int(total_slices * progress)),
+            "proposals_sent": int(total_proposals * progress),
+            "proposals_accepted": int(total_accepted * progress),
+            "upsell_arr": total_upsell_arr * progress,
+            "arr_protected": total_arr_protected * progress,
+            "burst_slices": max(0, int(total_bursts * progress)),
         }
 
-        # Feed events for this step
-        feed_offers = execute_query(f"""
-            SELECT customer_id, customer_segment, subscription_tier,
-                   monthly_revenue_opportunity, converted, sent_at
-            FROM {CATALOG_SCHEMA}.sms_campaign_log
+        feed_proposals = execute_query(f"""
+            SELECT customer_id, company_name, monthly_revenue_opportunity, accepted, sent_at, utilization_pct
+            FROM {CATALOG_SCHEMA}.upsell_proposal_log
             ORDER BY sent_at DESC
-            LIMIT {min(15, max(3, int(step * 0.5)))}
+            LIMIT {min(12, max(3, int(step * 0.4)))}
         """)
-
         feed = []
-        for o in feed_offers:
-            icon = "trophy" if o.get("converted") else "offer"
+        for p in feed_proposals:
+            icon = "accepted" if p.get("accepted") else "proposal"
+            util = _to_float(p.get("utilization_pct", 0))
+            company = p.get("company_name") or str(p["customer_id"])[:12]
             feed.append({
                 "type": icon,
-                "message": f"{'Converted!' if o.get('converted') else 'Offer sent to'} Customer {str(o['customer_id'])[:8]}... ({o.get('customer_segment', 'standard')}) - ${_to_float(o.get('monthly_revenue_opportunity', 0)):.0f}/mo",
-                "timestamp": str(o.get("sent_at", "")),
+                "message": f"{'Accepted!' if p.get('accepted') else 'Proposal to'} {company} \u2014 {util:.0f}% util \u2014 +${_to_float(p.get('monthly_revenue_opportunity', 0)):.0f}/mo",
+                "timestamp": str(p.get("sent_at", "")),
             })
-
         for t in towers:
             if t.get("congestion_predicted_15min"):
                 feed.append({
                     "type": "congestion",
-                    "message": f"Congestion predicted on {t['tower_id']} - Score {t['congestion_score']:.2f} - Slice provisioned",
+                    "message": f"Congestion on {t['tower_id']} \u2014 Score {t['congestion_score']:.2f} \u2014 Burst slice provisioned",
                     "timestamp": "",
                 })
 
-        # Match timeline label
         timeline_labels = [
             "Pre-match", "Pre-match", "Pre-match", "Pre-match", "Pre-match",
             "Gates Open", "Gates Open", "Gates Open",
@@ -575,19 +560,16 @@ def get_simulation_step(step: int):
             "T+73 GOAL!", "T+73 GOAL!",
             "Full Time", "Full Time", "Post-match", "Post-match",
         ]
-        timeline_label = timeline_labels[step] if step < len(timeline_labels) else "Post-match"
-
         return {
             "step": step,
             "total_steps": TOTAL_SIMULATION_STEPS,
-            "timeline_label": timeline_label,
+            "timeline_label": timeline_labels[step] if step < len(timeline_labels) else "Post-match",
             "towers": towers,
             "customers": customers,
             "kpis": kpis,
             "feed": feed[:15],
         }
     except Exception as e:
-        # Fallback to demo data on error
         print(f"Simulation query error: {e}")
         return _demo_simulation_step(step)
 
@@ -601,33 +583,42 @@ def _demo_simulation_step(step: int):
     for tid, (lat, lon) in TOWER_POSITIONS.items():
         cong = rng.uniform(0.2, 0.95) * progress
         towers.append({
-            "tower_id": tid,
-            "latitude": lat,
-            "longitude": lon,
+            "tower_id": tid, "latitude": lat, "longitude": lon,
             "bandwidth_utilization_pct": rng.uniform(30, 95) * progress,
             "active_connections": int(rng.randint(100, 800) * progress),
             "latency_ms": rng.uniform(5, 50) * progress,
             "congestion_score": cong,
-            "congestion_predicted_15min": cong > 0.7,
+            "congestion_predicted_15min": cong > 0.68,
         })
 
+    surge_accounts = {"BC-ESPN-001", "BC-FOX-001", "BC-APSN-001", "PM-TICK-001", "PM-SQR-001", "TM-USMNT-001"}
     customers = []
-    customer_count = int(20 + progress * 180)
-    segments = ["high_value_influencer", "high_value", "influencer", "standard", "premium"]
-    for i in range(customer_count):
-        tid = list(TOWER_POSITIONS.keys())[rng.randint(0, 7)]
-        base_lat, base_lon = TOWER_POSITIONS[tid]
-        spread = 0.0020 * (1 - progress * 0.6)
-        conv_score = rng.uniform(0.3, 1.0)
+    for cid, company, ctype, tower in B2B_ACCOUNTS:
+        base_lat, base_lon = TOWER_POSITIONS.get(tower, STADIUM_CENTER)
+        seed = int(hashlib.md5(cid.encode()).hexdigest()[:8], 16)
+        crng = random.Random(seed + step)
+        offset_lat = crng.uniform(-0.0008, 0.0008)
+        offset_lon = crng.uniform(-0.0008, 0.0008)
+        base_util = 0.60 if cid in surge_accounts else 0.45
+        util_pct = min(99.0, (base_util + progress * 0.40) * 100 + crng.uniform(-3, 3))
+        conv_score = min(1.0, (util_pct - 70) / 30.0) if util_pct > 70 else 0.3
+        show_proposal = conv_score > 0.65 and step >= 12 and crng.random() < progress
         customers.append({
-            "customer_id": f"CUST-{i:04d}",
-            "customer_segment": rng.choice(segments),
-            "latitude": base_lat + rng.uniform(-spread, spread),
-            "longitude": base_lon + rng.uniform(-spread, spread),
-            "conversion_score": conv_score,
-            "tower_id": tid,
-            "show_offer": conv_score > 0.7 and step >= 10 and rng.random() < progress,
-            "monthly_revenue_opportunity": rng.uniform(15, 85),
+            "customer_id": cid,
+            "company_name": company,
+            "customer_type": ctype,
+            "customer_segment": _type_to_segment(ctype),
+            "latitude": base_lat + offset_lat,
+            "longitude": base_lon + offset_lon,
+            "conversion_score": round(conv_score, 3),
+            "utilization_pct": round(util_pct, 1),
+            "breach_risk_level": "critical" if util_pct >= 90 else "warning" if util_pct >= 85 else "watch",
+            "tower_id": tower,
+            "show_proposal": show_proposal,
+            "contracted_bandwidth_mbps": 300.0,
+            "current_bandwidth_mbps": round(300.0 * util_pct / 100, 1),
+            "monthly_revenue_opportunity": 1200.0,
+            "monthly_contract_value": 5000.0,
         })
 
     timeline_labels = [
@@ -641,10 +632,10 @@ def _demo_simulation_step(step: int):
         "T+73 GOAL!", "T+73 GOAL!",
         "Full Time", "Full Time", "Post-match", "Post-match",
     ]
-
     congested_count = sum(1 for t in towers if t["congestion_predicted_15min"])
-    offers = int(320 * progress)
-    converted = int(offers * 0.34)
+    accounts_at_risk = sum(1 for c in customers if c["utilization_pct"] >= 85)
+    proposals = int(min(12, accounts_at_risk) * progress)
+    accepted  = int(proposals * 0.62)
 
     return {
         "step": step,
@@ -653,20 +644,31 @@ def _demo_simulation_step(step: int):
         "towers": towers,
         "customers": customers,
         "kpis": {
-            "customers_near": customer_count,
+            "accounts_at_risk": accounts_at_risk,
             "active_towers": 8,
             "towers_congested": congested_count,
-            "offers_sent": offers,
-            "converted": converted,
-            "projected_arr": 148000 * progress,
-            "active_slices": int(12 * progress),
+            "proposals_sent": proposals,
+            "proposals_accepted": accepted,
+            "upsell_arr": 168000 * progress,
+            "arr_protected": 2400000 * progress,
+            "burst_slices": int(accounts_at_risk * progress),
         },
         "feed": [
-            {"type": "offer", "message": f"Offer sent to CUST-{rng.randint(1000,9999)} (high_value) - $45/mo", "timestamp": ""},
-            {"type": "congestion", "message": f"Congestion on SEA-LF-00{rng.randint(1,8)} - Slice provisioned", "timestamp": ""},
-            {"type": "trophy", "message": f"Converted! CUST-{rng.randint(1000,9999)} (influencer) - $65/mo", "timestamp": ""},
+            {"type": "proposal",   "message": "Proposal to ESPN \u2014 94% util \u2014 +$2,000/mo", "timestamp": ""},
+            {"type": "congestion", "message": "Congestion on SEA-LF-001 \u2014 Burst slice provisioned", "timestamp": ""},
+            {"type": "accepted",   "message": "Accepted! Fox Sports \u2014 expanded +400 Mbps", "timestamp": ""},
         ],
     }
+
+
+def _type_to_segment(ctype: str) -> str:
+    return {
+        "broadcaster": "media_rights",
+        "venue_operator": "venue_ops",
+        "public_safety": "critical_services",
+        "payment_processor": "payments_ticketing",
+        "team_sponsor": "teams_sponsors",
+    }.get(ctype, "other")
 
 
 # ---------------------------------------------------------------------------
@@ -700,14 +702,11 @@ if frontend_dist.exists():
 
     @app.get("/{full_path:path}")
     async def serve_spa(full_path: str):
-        # Don't catch API routes
         if full_path.startswith("api/"):
             raise HTTPException(status_code=404, detail="Not found")
-        # Try to serve static file first
         static_file = frontend_dist / full_path
         if static_file.is_file():
             return FileResponse(static_file)
-        # Fallback to index.html for SPA routing
         return FileResponse(frontend_dist / "index.html")
 else:
     @app.get("/")

@@ -1,9 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 
 const ICONS = {
-  offer: { emoji: '📱', color: '#00AEEF', label: 'OFFER' },
+  proposal:   { emoji: '📋', color: '#00AEEF', label: 'UPSELL PROPOSAL' },
+  accepted:   { emoji: '✅', color: '#00C853', label: 'ACCEPTED' },
   congestion: { emoji: '⚡', color: '#FF4444', label: 'ALERT' },
-  trophy: { emoji: '🏆', color: '#FFAB00', label: 'CONVERTED' },
+  // legacy aliases so old feed events still render
+  offer:   { emoji: '📋', color: '#00AEEF', label: 'PROPOSAL' },
+  trophy:  { emoji: '✅', color: '#00C853', label: 'ACCEPTED' },
 };
 
 export default function LiveFeed({ feed }) {
@@ -30,7 +33,7 @@ export default function LiveFeed({ feed }) {
           </div>
         ) : (
           feed.map((item, i) => {
-            const config = ICONS[item.type] || ICONS.offer;
+            const config = ICONS[item.type] || ICONS.proposal;
             return (
               <div key={i} className={`feed-item feed-item-${item.type}`} style={{ animationDelay: `${i * 0.05}s` }}>
                 <div className="feed-item-icon" style={{ background: `${config.color}15` }}>
