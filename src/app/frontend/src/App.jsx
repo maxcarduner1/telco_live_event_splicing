@@ -158,7 +158,7 @@ export default function App() {
       {/* Main Content */}
       <div className="main-content">
         <div className="map-panel">
-          <StadiumMap towers={towers} customers={customers} />
+          <StadiumMap towers={towers} customers={customers} simStep={simStep} />
         </div>
         <div className="feed-panel">
           <LiveFeed feed={feed} />

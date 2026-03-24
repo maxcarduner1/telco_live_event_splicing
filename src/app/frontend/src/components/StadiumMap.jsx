@@ -46,7 +46,36 @@ function getTowerColor(congestionScore) {
 
 const stadiumCenter = latLonToSvg(47.5952, -122.3316);
 
-export default function StadiumMap({ towers, customers }) {
+// Seeded pseudo-random (deterministic, varies by seed)
+function srand(seed) {
+  const x = Math.sin(seed + 1) * 43758.5453123;
+  return x - Math.floor(x);
+}
+
+// Generate fan crowd dots — moving white/grey dots in the seating bowl
+function generateFans(simStep) {
+  if (simStep < 0) return [];
+  const CLAT = 47.5952, CLON = -122.3316;
+  // Count grows: trickle pre-gates, surge at gates (step 5), full at kickoff (step 8)
+  const count = simStep < 2  ? 0
+              : simStep < 5  ? 30 + simStep * 8
+              : simStep < 8  ? 80 + (simStep - 5) * 40
+              : Math.min(300, 200 + (simStep - 8) * 8);
+  const fans = [];
+  for (let i = 0; i < count; i++) {
+    // Base position per fan index + small step-driven drift = movement
+    const baseAngle = srand(i * 137.508) * Math.PI * 2;
+    const drift = (srand(i * 71.3 + simStep * 499.7) - 0.5) * 0.25;
+    const angle = baseAngle + drift;
+    const baseR = 0.00042 + srand(i * 241.1) * 0.00085;
+    const rDrift = (srand(i * 53.9 + simStep * 317.3) - 0.5) * 0.00015;
+    const r = baseR + rDrift;
+    fans.push({ lat: CLAT + Math.cos(angle) * r * 0.65, lon: CLON + Math.sin(angle) * r });
+  }
+  return fans;
+}
+
+export default function StadiumMap({ towers, customers, simStep = -1 }) {
   const [hoveredTower, setHoveredTower] = useState(null);
   const [hoveredCustomer, setHoveredCustomer] = useState(null);
 
@@ -58,6 +87,11 @@ export default function StadiumMap({ towers, customers }) {
   const customerPositions = useMemo(() =>
     customers.map(c => ({ ...c, ...latLonToSvg(c.latitude, c.longitude) })),
     [customers]
+  );
+
+  const fanPositions = useMemo(() =>
+    generateFans(simStep).map(f => latLonToSvg(f.lat, f.lon)),
+    [simStep]
   );
 
   return (
@@ -114,6 +148,11 @@ export default function StadiumMap({ towers, customers }) {
           <circle key={`cov-${t.tower_id}`} cx={t.x} cy={t.y} r={55}
             fill="none" stroke={getTowerColor(t.congestion_score)}
             strokeWidth="0.5" opacity="0.15" strokeDasharray="4 4" />
+        ))}
+
+        {/* Fan crowd dots — moving white/grey, fill seating bowl */}
+        {fanPositions.map((f, i) => (
+          <circle key={`fan-${i}`} cx={f.x} cy={f.y} r={1.5} fill="#aabbcc" opacity="0.35" />
         ))}
 
         {/* B2B customer dots */}

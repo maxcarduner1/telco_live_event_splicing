@@ -479,11 +479,15 @@ def get_simulation_step(step: int):
             tid = row.get("tower_id", "")
             base_lat, base_lon = TOWER_POSITIONS.get(tid, STADIUM_CENTER)
             seed = int(hashlib.md5(str(row["customer_id"]).encode()).hexdigest()[:8], 16)
-            rng = random.Random(seed + step)
+            rng = random.Random(seed)
             offset_lat = rng.uniform(-0.0010, 0.0010)
             offset_lon = rng.uniform(-0.0010, 0.0010)
             conv_score = _to_float(row.get("conversion_score"))
-            show_proposal = conv_score > 0.65 and step >= 12 and rng.random() < progress
+            # Reveal step: seed-based so reveals spread from step 4 (pre-match) to step 21
+            # Higher conv_score accounts reveal earlier via score-weighted seed
+            score_offset = int((1.0 - min(1.0, max(0.0, conv_score))) * 10)
+            reveal_step = 4 + ((seed + score_offset) % 18)
+            show_proposal = step >= reveal_step
             customers.append({
                 "customer_id": str(row["customer_id"]),
                 "company_name": str(row.get("company_name", row["customer_id"])),
@@ -532,6 +536,9 @@ def get_simulation_step(step: int):
             LIMIT {min(12, max(3, int(step * 0.4)))}
         """)
         feed = []
+        # Inject narrative events for the current match phase
+        narrative = _get_narrative_events(step)
+        feed.extend(narrative)
         for p in feed_proposals:
             icon = "accepted" if p.get("accepted") else "proposal"
             util = _to_float(p.get("utilization_pct", 0))
@@ -581,10 +588,12 @@ def _demo_simulation_step(step: int):
 
     towers = []
     for tid, (lat, lon) in TOWER_POSITIONS.items():
-        cong = rng.uniform(0.2, 0.95) * progress
+        # Goal spike at steps 24-25: towers near broadcaster cluster hit critical
+        goal_spike = 1.4 if step in (24, 25) and tid in ("SEA-LF-001", "SEA-LF-002", "SEA-LF-003") else 1.0
+        cong = min(0.99, rng.uniform(0.2, 0.85) * progress * goal_spike)
         towers.append({
             "tower_id": tid, "latitude": lat, "longitude": lon,
-            "bandwidth_utilization_pct": rng.uniform(30, 95) * progress,
+            "bandwidth_utilization_pct": min(99, rng.uniform(30, 90) * progress * goal_spike),
             "active_connections": int(rng.randint(100, 800) * progress),
             "latency_ms": rng.uniform(5, 50) * progress,
             "congestion_score": cong,
@@ -595,14 +604,20 @@ def _demo_simulation_step(step: int):
     customers = []
     for cid, company, ctype, tower in B2B_ACCOUNTS:
         base_lat, base_lon = TOWER_POSITIONS.get(tower, STADIUM_CENTER)
+        # Fixed seed — no step component so dots don't move
         seed = int(hashlib.md5(cid.encode()).hexdigest()[:8], 16)
-        crng = random.Random(seed + step)
+        crng = random.Random(seed)
         offset_lat = crng.uniform(-0.0008, 0.0008)
         offset_lon = crng.uniform(-0.0008, 0.0008)
         base_util = 0.60 if cid in surge_accounts else 0.45
-        util_pct = min(99.0, (base_util + progress * 0.40) * 100 + crng.uniform(-3, 3))
+        # Spike surge accounts harder at the goal
+        goal_boost = 0.15 if step in (24, 25) and cid in surge_accounts else 0.0
+        util_pct = min(99.0, (base_util + progress * 0.40 + goal_boost) * 100 + crng.uniform(-3, 3))
         conv_score = min(1.0, (util_pct - 70) / 30.0) if util_pct > 70 else 0.3
-        show_proposal = conv_score > 0.65 and step >= 12 and crng.random() < progress
+        # Reveal step: seed-based so reveals spread from step 4 (pre-match) to step 21
+        score_offset = int((1.0 - min(1.0, max(0.0, conv_score))) * 10)
+        reveal_step = 4 + ((seed + score_offset) % 18)
+        show_proposal = step >= reveal_step
         customers.append({
             "customer_id": cid,
             "company_name": company,
@@ -634,8 +649,8 @@ def _demo_simulation_step(step: int):
     ]
     congested_count = sum(1 for t in towers if t["congestion_predicted_15min"])
     accounts_at_risk = sum(1 for c in customers if c["utilization_pct"] >= 85)
-    proposals = int(min(12, accounts_at_risk) * progress)
-    accepted  = int(proposals * 0.62)
+    proposals = int(min(18, accounts_at_risk) * progress)
+    accepted  = int(proposals * 0.69)
 
     return {
         "step": step,
@@ -653,12 +668,85 @@ def _demo_simulation_step(step: int):
             "arr_protected": 2400000 * progress,
             "burst_slices": int(accounts_at_risk * progress),
         },
-        "feed": [
-            {"type": "proposal",   "message": "Proposal to ESPN \u2014 94% util \u2014 +$2,000/mo", "timestamp": ""},
-            {"type": "congestion", "message": "Congestion on SEA-LF-001 \u2014 Burst slice provisioned", "timestamp": ""},
-            {"type": "accepted",   "message": "Accepted! Fox Sports \u2014 expanded +400 Mbps", "timestamp": ""},
-        ],
+        "feed": _get_narrative_events(step),
     }
+
+
+# ---------------------------------------------------------------------------
+# Simulation narrative event log — step-aware, goal burst at step 24
+# ---------------------------------------------------------------------------
+
+# All (step, event) pairs. Events at the same step appear together.
+_NARRATIVE_EVENTS = [
+    (0,  "congestion", "All 8 Lumen Field towers online \u2014 Pre-match telemetry streaming"),
+    (0,  "congestion", "SEA-LF-001 baseline BW: 12% \u2014 Monitoring active"),
+    (2,  "proposal",   "Proposal to Ticketmaster Gates \u2014 Early entry scan surge: 41% util \u2014 +$1,200/mo"),
+    (4,  "proposal",   "Proposal to SP+ Parking Pay \u2014 Lot scan load: 48% util \u2014 +$600/mo"),
+    (5,  "congestion", "Gates opening \u2014 SEA-LF-001 BW climbing to 38%"),
+    (5,  "proposal",   "Proposal to Square POS (merch) \u2014 Queue surge: 52% util \u2014 +$800/mo"),
+    (5,  "proposal",   "Proposal to AXS Ticketing \u2014 Entry scan load: 55% util \u2014 +$1,200/mo"),
+    (7,  "accepted",   "Accepted! AXS Ticketing \u2014 +200 Mbps burst slice provisioned"),
+    (7,  "congestion", "SEA-LF-002 congestion predicted \u2014 Burst slice auto-provisioned"),
+    (7,  "accepted",   "Accepted! Ticketmaster Gates \u2014 +300 Mbps \u2014 SLA protected"),
+    (8,  "congestion", "KICKOFF \u2014 All broadcaster slices active \u2014 SEA-LF-001 at 61%"),
+    (8,  "proposal",   "Proposal to ESPN \u2014 Live uplink rising: 68% util \u2014 +$2,000/mo"),
+    (8,  "proposal",   "Proposal to Fox Sports \u2014 4K stream load: 65% util \u2014 +$1,800/mo"),
+    (10, "accepted",   "Accepted! ESPN \u2014 +500 Mbps broadcast_uplink burst secured"),
+    (10, "congestion", "SEA-LF-003 BW trend: +18%/15min \u2014 NWDAF alert \u2014 Burst provisioned"),
+    (10, "proposal",   "Proposal to Apple TV+ Sports \u2014 Stream quality spike: 72% util \u2014 +$1,500/mo"),
+    (12, "accepted",   "Accepted! Fox Sports \u2014 +400 Mbps \u2014 Broadcast quality secured"),
+    (12, "proposal",   "Proposal to NBC Sports \u2014 Near SLA breach: 78% util \u2014 +$1,600/mo"),
+    (12, "congestion", "SEA-LF-001 congestion in 15min \u2014 Pre-provisioning burst slice"),
+    (14, "accepted",   "Accepted! Apple TV+ Sports \u2014 +500 Mbps burst active"),
+    (14, "proposal",   "Proposal to TUDN/Univision \u2014 Spanish uplink: 74% util \u2014 +$1,400/mo"),
+    (15, "congestion", "HALFTIME \u2014 Concession surge \u2014 Payment processors spiking"),
+    (15, "proposal",   "Proposal to Aramark Kiosks N \u2014 Concession rush: 82% util \u2014 +$600/mo"),
+    (15, "proposal",   "Proposal to Square POS (N) \u2014 Merch queue: 79% util \u2014 +$700/mo"),
+    (15, "proposal",   "Proposal to Clover POS (VIP) \u2014 VIP lounge surge: 85% util \u2014 +$900/mo"),
+    (15, "accepted",   "Accepted! Aramark Kiosks N \u2014 +150 Mbps burst slice active"),
+    (16, "accepted",   "Accepted! NBC Sports \u2014 +350 Mbps uplink secured"),
+    (16, "accepted",   "Accepted! TUDN/Univision \u2014 +400 Mbps Spanish broadcast secured"),
+    (17, "congestion", "2ND HALF \u2014 SEA-LF-005 at 74% \u2014 NWDAF congestion alert issued"),
+    (17, "proposal",   "Proposal to Butterfly AR App \u2014 AR stats feed spike: 77% util \u2014 +$1,100/mo"),
+    (19, "accepted",   "Accepted! Clover POS (VIP) \u2014 +200 Mbps secured"),
+    (20, "proposal",   "Proposal to Sportradar \u2014 Live data feed: 81% util \u2014 +$900/mo"),
+    (20, "congestion", "SEA-LF-007 alert \u2014 Public safety slice protected, burst side-provisioned"),
+    (22, "accepted",   "Accepted! Butterfly AR App \u2014 +250 Mbps AR feed secured"),
+    (23, "congestion", "SEA-LF-001 at 88% \u2014 Broadcaster cluster approaching SLA breach"),
+    (23, "proposal",   "Proposal to US Soccer Fed \u2014 Stats feed spike: 84% util \u2014 +$1,100/mo"),
+    # ---- GOAL BURST at step 24 ----
+    (24, "congestion", "\U0001f6a8 T+73 GOAL! SEA-LF-001 CRITICAL \u2014 97% BW \u2014 Emergency burst provisioned"),
+    (24, "congestion", "\U0001f6a8 SEA-LF-002 CRITICAL \u2014 94% BW \u2014 NBC/Paramount burst active"),
+    (24, "congestion", "\U0001f6a8 SEA-LF-003 ALERT \u2014 91% BW \u2014 Apple TV+ burst active"),
+    (24, "congestion", "\U0001f6a8 SEA-LF-004 ALERT \u2014 88% BW \u2014 Burst slices provisioned"),
+    (24, "proposal",   "URGENT: ESPN \u2014 GOAL spike 97% util \u2014 +$2,000/mo"),
+    (24, "proposal",   "URGENT: Fox Sports \u2014 94% util \u2014 +$1,800/mo"),
+    (24, "proposal",   "URGENT: Ticketmaster Gates \u2014 Replay surge 96% util \u2014 +$1,200/mo"),
+    (24, "proposal",   "URGENT: Square POS (merch) \u2014 Souvenir rush 95% util \u2014 +$800/mo"),
+    (24, "accepted",   "Accepted! ESPN \u2014 +600 Mbps burst \u2014 SLA protected \u2713"),
+    (24, "accepted",   "Accepted! Fox Sports \u2014 +500 Mbps \u2014 4K stream secured \u2713"),
+    (24, "accepted",   "Accepted! Ticketmaster Gates \u2014 +300 Mbps \u2014 Entry flow restored \u2713"),
+    (24, "accepted",   "Accepted! Square POS (merch) \u2014 +250 Mbps \u2014 Souvenir sales live \u2713"),
+    (25, "accepted",   "Accepted! US Soccer Fed \u2014 +200 Mbps post-goal analytics burst"),
+    (25, "accepted",   "Accepted! Sportradar \u2014 +150 Mbps live stats delivery secured"),
+    (25, "congestion", "Post-goal: All 8 towers stable \u2014 Burst slices holding \u2014 SLA maintained"),
+    (26, "congestion", "FULL TIME \u2014 Final whistle \u2014 Load dispersing across towers"),
+    (26, "accepted",   "Accepted! Aramark Kiosks S \u2014 +100 Mbps post-match concession burst"),
+    (28, "congestion", "Event complete \u2014 13 burst slices active \u2014 $17,040/mo upsell secured"),
+    (29, "accepted",   "Accepted! Cardtronics ATMs \u2014 Post-match cash surge \u2014 +$400/mo"),
+]
+
+
+def _get_narrative_events(step: int) -> list:
+    """Return all narrative events that have occurred up to and including `step`, newest first."""
+    events = [
+        {"type": etype, "message": msg, "timestamp": ""}
+        for s, etype, msg in _NARRATIVE_EVENTS
+        if s <= step
+    ]
+    # Reverse so most recent (highest step) events appear first
+    events.reverse()
+    return events[:20]
 
 
 def _type_to_segment(ctype: str) -> str:

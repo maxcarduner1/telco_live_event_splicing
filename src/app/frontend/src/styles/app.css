@@ -274,11 +274,10 @@ html, body {
 
 /* Customer dot animations */
 .customer-dot {
-  transition: cx 1s ease, cy 1s ease, opacity 0.5s ease;
+  transition: opacity 0.5s ease;
 }
 
 .customer-dot-offer {
-  transition: cx 1s ease, cy 1s ease;
   filter: url(#offerGlow);
 }
 
