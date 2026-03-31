@@ -117,6 +117,26 @@ html, body {
   gap: 12px;
 }
 
+.header-link {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border: 1px solid rgba(0, 174, 239, 0.35);
+  border-radius: 4px;
+  color: #00AEEF;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.header-link:hover {
+  background: rgba(0, 174, 239, 0.12);
+  border-color: rgba(0, 174, 239, 0.7);
+}
+
 .status-indicator {
   display: flex;
   align-items: center;

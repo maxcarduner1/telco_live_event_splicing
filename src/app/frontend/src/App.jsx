@@ -144,6 +144,24 @@ export default function App() {
           </div>
         </div>
         <div className="header-right">
+          <a
+            className="header-link"
+            href="https://fevm-cmegdemos.cloud.databricks.com/dashboardsv3/01f122f7607a171db796e5ed71d3597b/published?o=7474656585748611"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+            AI/BI Dashboard
+          </a>
+          <a
+            className="header-link"
+            href="https://fevm-cmegdemos.cloud.databricks.com/genie/rooms/01f122f8592319f6b473f45a6d2596e2?o=7474656585748611"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            AI/BI Genie
+          </a>
           <div className={`status-indicator ${mode === 'idle' ? 'idle' : 'active'}`}>
             <span className="status-dot" />
             {mode === 'simulation' ? 'SIMULATING' : mode === 'live' ? 'LIVE' : 'READY'}
